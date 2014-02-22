@@ -171,23 +171,33 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 	
+	pc.model->start();
+	
 	bool shutdown = false;
 	bool print_coordinates = false;
+	Square selection = Square(-1, -1);
+	ALLEGRO_MOUSE_STATE mouse;
 	while (true) {
 		// fetch all events in the queue and process them in order
 		ALLEGRO_EVENT ev;
 		while (!shutdown && al_get_next_event(pc.event_queue, &ev)) {
+			al_get_mouse_state(&mouse);
 			// select event type
 			switch (ev.type) {
 			case ALLEGRO_EVENT_KEY_DOWN:
 				break;
 			case ALLEGRO_EVENT_KEY_UP:
 				break;
-			case ALLEGRO_EVENT_KEY_CHAR:
-				if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+			case ALLEGRO_EVENT_KEY_CHAR: {
+				auto key = ev.keyboard.keycode;
+				if (key == ALLEGRO_KEY_ESCAPE) {
 					shutdown = true;
+				} else if (key == ALLEGRO_KEY_R) {
+					*pc.model = GameModel();
+					pc.model->start();
 				}
 				break;
+			}
 
 			case ALLEGRO_EVENT_MOUSE_AXES:
 				print_coordinates = true;
@@ -195,15 +205,35 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				print_coordinates = true;
 				break;
-			case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
 				print_coordinates = true;
+				Square square = pc.view->getSquareAt(mouse.x, mouse.y);
+				if (!square.isValid())
+					break;
+				else if (square == selection)
+					selection = Square(-1, -1);
+				else if (selection.isValid()) {
+					Move move;
+					move = Rules::examineMove(pc.model, selection, square);
+					bool is_legal = Rules::isMoveLegal(pc.model, move);
+					if (is_legal) {
+						pc.model->move(move);
+						selection = Square(-1, -1);
+					}
+				} else {
+					selection = square;
+				}
 				break;
+			}
 
 			case ALLEGRO_EVENT_MOUSE_WARPED:
+				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY:
+				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
+				print_coordinates = true;
 				break;
 
 			case ALLEGRO_EVENT_TIMER:
@@ -231,12 +261,10 @@ int main(int argc, char** argv)
 			break;
 		
 		al_set_target_backbuffer(al_get_current_display());
-		pc.view->draw(0.0, 0.0, *pc.model, Square(-1, -1));
+		pc.view->draw(0.0, 0.0, *pc.model, selection);
 		al_flip_display();
 		
 		if (print_coordinates) {
-			ALLEGRO_MOUSE_STATE mouse;
-			al_get_mouse_state(&mouse);
 			Square cursor = pc.view->getSquareAt(mouse.x, mouse.y);
 			printf("x, y pixel: %+04d %+04d; square: %2d %2d\n", mouse.x, mouse.y, cursor.getFile(), cursor.getRank());
 			print_coordinates = false;
