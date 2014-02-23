@@ -37,6 +37,8 @@ public:
     Coord getFile() const;
 
     bool isValid() const;
+	
+	static const Square INVALID;
 
 private:
     #if BITWISE_TYPES

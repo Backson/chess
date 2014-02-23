@@ -40,28 +40,6 @@ public:
     bool isInBound(Coord rank, Coord file) const;
     bool isInBound(Square square) const;
 
-    Piece getFirstOnPath(       Coord rank_src,  Coord file_src,
-                                Coord rank_dest, Coord file_dest,
-                                Coord rank_step, Coord file_step) const;
-    Piece getFirstBetween(      Coord rank_src,  Coord file_src,
-                                Coord rank_dest, Coord file_dest,
-                                Coord rank_step, Coord file_step) const;
-    Piece getFirstInDirection(  Coord rank_src,  Coord file_src,
-                                Coord rank_step, Coord file_step) const;
-    Piece getFirstOnPath(       Square src, Square dest,
-                                Coord rank_step, Coord file_step) const;
-    Piece getFirstBetween(      Square src, Square dest,
-                                Coord rank_step, Coord file_step) const;
-    Piece getFirstInDirection(  Square src,
-                                Coord rank_step, Coord file_step) const;
-
-    Piece getFirstOnPath(       Coord rank_src,  Coord file_src,
-                                Coord rank_dest, Coord file_dest) const;
-    Piece getFirstBetween(      Coord rank_src,  Coord file_src,
-                                Coord rank_dest, Coord file_dest) const;
-    Piece getFirstOnPath(       Square src, Square dest) const;
-    Piece getFirstBetween(      Square src, Square dest) const;
-
     static Board factoryStandard();
     static Board factoryEmpty();
 private:

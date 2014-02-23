@@ -50,7 +50,6 @@ private:
 	void drawCursor(float x, float y);
 	
 public:
-	
 	float getBorderSizePixels() const;
 	float getTileSizePixels() const;
     float getPanelWidthPixels() const;

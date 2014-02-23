@@ -214,8 +214,9 @@ int main(int argc, char** argv)
 					selection = Square(-1, -1);
 				else if (selection.isValid()) {
 					Move move;
-					move = Rules::examineMove(pc.model, selection, square);
-					bool is_legal = Rules::isMoveLegal(pc.model, move);
+					Rules rules;
+					move = rules.examineMove(*pc.model, selection, square);
+					bool is_legal = rules.isMoveLegal(*pc.model, move);
 					if (is_legal) {
 						pc.model->move(move);
 						selection = Square(-1, -1);

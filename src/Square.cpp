@@ -114,6 +114,8 @@ bool Square::isValid() const
 {
     Coord rank = getRank();
     Coord file = getFile();
-    bool result = (rank != -1) && (file != -1);
+    bool result = (rank >= 0) && (file >= 0);
     return result;
 }
+
+const Square Square::INVALID = Square(-1, -1);

@@ -68,9 +68,8 @@ void View::drawPanel(float x, float y, const Board &board, Square selection) {
 void View::drawBorder(float x, float y) {
 	auto color = al_map_rgb(0, 0, 0);
 	float border = getBorderSizePixels();
-	float width, height;
-	width = getPanelWidthPixels();
-	height = getPanelHeightPixels();
+	float width = getPanelWidthPixels();
+	float height = getPanelHeightPixels();
 	
 	// top
     al_draw_filled_rectangle(

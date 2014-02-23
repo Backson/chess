@@ -41,11 +41,9 @@ public:
     GameState getGameState() const;
     bool isPlaying() const;
 
-    bool isMoveLegal(const Square& src, const Square& dest) const;
-
     // OPERATIONS
-    int start();
-    int move(const Move& move);
+    void start();
+    void move(const Move& move);
 
 private:
     Board* board;

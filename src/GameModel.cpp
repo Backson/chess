@@ -85,38 +85,17 @@ bool GameModel::isPlaying() const
     return gameState == STATE_WHITE_TURN || gameState == STATE_BLACK_TURN;
 }
 
-bool GameModel::isMoveLegal(const Square& src, const Square& dest) const
-{
-    Move m = Rules::examineMove(this, src, dest);
-    return Rules::isMoveLegal(this, m);
-}
-
-
 // OPERATIONS
 
-int GameModel::start()
-{
+void GameModel::start() {
     if (gameState == STATE_START)
-    {
         gameState = STATE_WHITE_TURN;
-        return 0; // game was started
-    }
-    else
-    {
-        return 1; // game is already running
-    }
 }
 
-int GameModel::move(const Move& m)
-{
-    if (!Rules::isMoveLegal(this, m)) return 1;
+void GameModel::move(const Move& m) {
+    if (!isPlaying())
+		return;
 
-    board->removePiece(m.dest);
     board->movePiece(m.src, m.dest);
-
     gameState = gameState == STATE_WHITE_TURN ? STATE_BLACK_TURN : STATE_WHITE_TURN;
-
-    //changeSignal(*this);
-
-    return 0;
 }
