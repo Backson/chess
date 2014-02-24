@@ -41,21 +41,4 @@ private:
     Piece(Player); // disallow inappropriate implicit cast
 };
 
-#define DEFINE_PIECE_SHORTCUTS \
-    const Piece K = Piece(PLAYER_WHITE | TYPE_KING); \
-    const Piece Q = Piece(PLAYER_WHITE | TYPE_QUEEN); \
-    const Piece R = Piece(PLAYER_WHITE | TYPE_ROOK); \
-    const Piece B = Piece(PLAYER_WHITE | TYPE_BISHOP); \
-    const Piece N = Piece(PLAYER_WHITE | TYPE_KNIGHT); \
-    const Piece P = Piece(PLAYER_WHITE | TYPE_PAWN); \
-    \
-    const Piece k = Piece(PLAYER_BLACK | TYPE_KING); \
-    const Piece q = Piece(PLAYER_BLACK | TYPE_QUEEN); \
-    const Piece r = Piece(PLAYER_BLACK | TYPE_ROOK); \
-    const Piece b = Piece(PLAYER_BLACK | TYPE_BISHOP); \
-    const Piece n = Piece(PLAYER_BLACK | TYPE_KNIGHT); \
-    const Piece p = Piece(PLAYER_BLACK | TYPE_PAWN); \
-    \
-    const Piece _ = Piece(PLAYER_WHITE | TYPE_NONE)
-
 #endif // Piece_h

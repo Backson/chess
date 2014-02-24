@@ -85,7 +85,7 @@
       </AdditionalRules>
     </Configuration>
     <GlobalSettings>
-      <Compiler Options="-std=gnu++0x">
+      <Compiler Options="-Wall;-std=gnu++0x">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="">

@@ -109,7 +109,8 @@ void View::drawBoard(float x, float y, const Board& board, Square selection) {
 			drawSelection(piece_x, piece_y);
 		}
 		if (algebraic == cursor) {
-			drawCursor(piece_x, piece_y);
+			if (board.getPiece(cursor).getType() != TYPE_NONE)
+				drawCursor(piece_x, piece_y);
 		}
 	}
 }

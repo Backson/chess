@@ -6,7 +6,7 @@
 #define Rules_h
 
 #include "types.h"
-class GameModel;
+#include "GameModel.h"
 class Board;
 class Move;
 class Piece;
@@ -26,14 +26,39 @@ public:
 	 * to guess what the player probably wants and then check whether that
 	 * move is legal afterwards with isMoveLegal.
 	 */
-    Move examineMove(const GameModel &gameModel, Square src, Square dest);
+    Move examineMove(const GameModel &, Square src, Square dest);
 	
     /** Checks whether a particular move is legal by standard chess rules.
 	 */
-    bool isMoveLegal(const GameModel &gameModel, Move move);
+    bool isMoveLegal(const GameModel &, Move);
 	
+	/** 
+	 */
+	bool isCastlingLegal(const GameModel &, Square src, Square dest);
+	 
+	/*
+	 */
+	bool isEnPassantLegal(const GameModel &, Square src, Square dest);
+	
+	/* checks whether a move is legal that is not a castling or en passant.
+	 */
+	bool isRegularMoveLegal(const GameModel &, Square src, Square dest, bool capture_flag);
+	
+	Square getKingStartingSquare(const Board &board, Player player);
+	Square getRookStartingSquare(const Board &board, Player player, CastlingType type);
+	
+	/** Returns true if the players king is attacked
+	 */
 	bool isPlayerInCheck(const Board &board, Player player);
+	
+	/** Returns true if the player attacks a square with one of his pieces
+	 */
 	bool doesPlayerAttackSquare(const Board &board, Square square, Player player);
+	
+	/** returns true if there are no other pieces between src and dest.
+	 * Both squares need to be connected by a straight or diagonal line,
+	 * otherwise the behaviour is undefined.
+	 */
 	bool isPathFree(const Board &board, Square src, Square dest);
 	
     /** Check whether a move fullfills the general movement pattern of a piece.
@@ -41,7 +66,7 @@ public:
 	 * src and dest is inside the board and in a diagonal line from src.  Any
 	 * other pieces on the board are ignored.
      */
-    bool isSquareInRange(const Board &board, Square src, Square dest, bool capture_flag = false);
+    bool isSquareInRange(const Board &board, Square src, Square dest, bool capture_flag);
 	
 	/** simplified case for most pieces.
 	 * The parameters only contain enough information, if type is not

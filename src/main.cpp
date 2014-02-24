@@ -174,7 +174,6 @@ int main(int argc, char** argv)
 	pc.model->start();
 	
 	bool shutdown = false;
-	bool print_coordinates = false;
 	Square selection = Square(-1, -1);
 	ALLEGRO_MOUSE_STATE mouse;
 	while (true) {
@@ -200,41 +199,43 @@ int main(int argc, char** argv)
 			}
 
 			case ALLEGRO_EVENT_MOUSE_AXES:
-				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
-				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
-				print_coordinates = true;
 				Square square = pc.view->getSquareAt(mouse.x, mouse.y);
-				if (!square.isValid())
-					break;
-				else if (square == selection)
-					selection = Square(-1, -1);
-				else if (selection.isValid()) {
-					Move move;
-					Rules rules;
-					move = rules.examineMove(*pc.model, selection, square);
-					bool is_legal = rules.isMoveLegal(*pc.model, move);
-					if (is_legal) {
-						pc.model->move(move);
-						selection = Square(-1, -1);
+				if (ev.mouse.button == 1) {
+					if (!square.isValid() || square == selection) {
+						selection = Square::INVALID;
+						goto NEXT_EVENT;
 					}
-				} else {
-					selection = square;
+					
+					if (selection.isValid()) {
+						Move move;
+						Rules rules;
+						move = rules.examineMove(*pc.model, selection, square);
+						bool is_legal = rules.isMoveLegal(*pc.model, move);
+						if (is_legal) {
+							pc.model->move(move);
+							selection = Square::INVALID;
+							goto NEXT_EVENT;
+						}
+					}
+					
+					Piece piece = pc.model->getBoard().getPiece(square);
+					if (piece.getType() == TYPE_NONE)
+						selection = Square::INVALID;
+					else
+						selection = square;
 				}
 				break;
 			}
 
 			case ALLEGRO_EVENT_MOUSE_WARPED:
-				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY:
-				print_coordinates = true;
 				break;
 			case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
-				print_coordinates = true;
 				break;
 
 			case ALLEGRO_EVENT_TIMER:
@@ -256,6 +257,7 @@ int main(int argc, char** argv)
 			default:
 				break; // ignore everything we don't know
 			} // select event type
+		NEXT_EVENT:;
 		} // process all events
 
 		if (shutdown)
@@ -264,12 +266,6 @@ int main(int argc, char** argv)
 		al_set_target_backbuffer(al_get_current_display());
 		pc.view->draw(0.0, 0.0, *pc.model, selection);
 		al_flip_display();
-		
-		if (print_coordinates) {
-			Square cursor = pc.view->getSquareAt(mouse.x, mouse.y);
-			printf("x, y pixel: %+04d %+04d; square: %2d %2d\n", mouse.x, mouse.y, cursor.getFile(), cursor.getRank());
-			print_coordinates = false;
-		}
 	} // main loop
 
 	finilize(&pc);

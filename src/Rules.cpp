@@ -22,6 +22,7 @@ Move Rules::examineMove(const GameModel &model, Square src, Square dest) {
     m.player = board.getPiece(src).getPlayer();
 
     // check for promotion (assume queen)
+	m.promotion = TYPE_NONE;
     if (board.getPiece(src).getType() == TYPE_PAWN) {
         switch (m.player) {
         case PLAYER_WHITE:
@@ -31,21 +32,28 @@ Move Rules::examineMove(const GameModel &model, Square src, Square dest) {
             m.promotion = dest.getRank() == 0 ? TYPE_QUEEN : TYPE_NONE;
             break;
         default:
-            m.promotion = TYPE_NONE;
             break;
         }
-    } else {
-        m.promotion = TYPE_NONE;
     }
 
     m.en_passant_flag = false;
     m.capture_flag = board.getPiece(dest).getType() != TYPE_NONE;
     m.castling_flag = false;
+	if (board.getPiece(src).getType() == TYPE_KING) {
+		Coord file_d = m.dest.getFile() - m.src.getFile();
+		if (file_d * file_d == 4)
+			m.castling_flag = true;
+	}
 
     return m;
 }
 
 bool Rules::isMoveLegal(const GameModel &model, Move move) {
+	Player player = move.player;
+	
+	const Board &board = model.getBoard();
+    Piece piece = board.getPiece(move.src);
+	
     // is it this players turn?
     switch (model.getGameState()) {
     case STATE_WHITE_TURN:
@@ -59,81 +67,152 @@ bool Rules::isMoveLegal(const GameModel &model, Move move) {
     default:
         return false;
     }
-	
-	const Board &board = model.getBoard();
-    Piece src_piece = board.getPiece(move.src);
-    Piece dest_piece = board.getPiece(move.dest);
 
     // is there a piece on src?
-    if (src_piece.getType() == TYPE_NONE)
+    if (piece.getType() == TYPE_NONE)
         return false; // player wants to move an empty piece
 
     // is the piece owned by the player making the move?
-    if (src_piece.getPlayer() != move.player)
+    if (piece.getPlayer() != player)
         return false; // player wants to move his opponent's pieces
 
     // has the piece actually moved?
     if (move.src == move.dest)
         return false; // the piece must not stay on its square
 	
-	// can the piece actually move there (ignoring other pieces on the board)?
-	if (!isSquareInRange(board, move.src, move.dest, move.capture_flag))
+	// special cases
+    if (move.castling_flag) {
+		if (move.capture_flag || move.en_passant_flag)
+			return false;
+		if (!isCastlingLegal(model, move.src, move.dest))
+			return false;
+    } else if (move.en_passant_flag) {
+		if (!move.capture_flag)
+			return false;
+		if (!isEnPassantLegal(model, move.src, move.dest))
+			return false;
+	} else {
+		if (!isRegularMoveLegal(model, move.src, move.dest, move.capture_flag))
+			return false;
+	}
+
+	// do we end our turn in check?
+    GameModel result = model; // explicitly copy the current position
+	result.move(move); // apply the move (should otherwise be legal by now)
+	if (isPlayerInCheck(result.getBoard(), player))
 		return false;
 	
-	// check whether the path between src and dest is actually free
-	if (src_piece.getType() != TYPE_KNIGHT)
-		if (!isPathFree(board, move.src, move.dest))
-			return false;
+	// passed all tests
+	return true;
+}
+
+bool Rules::isCastlingLegal(const GameModel &model, Square src, Square dest) {
+	const Board &board = model.getBoard();
+	Piece piece = board.getPiece(src);
+	Player player = piece.getPlayer();
+	
+	// only allow castling for kings in the starting position
+	if (getKingStartingSquare(board, player) != src)
+		return false;
+	if (piece.getType() != TYPE_KING)
+		return false;
+
+	// which of the two castlings is being performed?
+	Coord file_d = dest.getFile() - src.getFile();
+	CastlingType castling_type;
+	if (file_d == +2)
+		castling_type = KINGSIDE;
+	else if (file_d == -2)
+		castling_type = QUEENSIDE;
+	else
+		return false;
+	
+	// is there a rook where it needs to be?
+	Square rook_square = getRookStartingSquare(board, player, castling_type);
+	if (board.getPiece(rook_square).getType() != TYPE_ROOK)
+		return false;
+	
+	// was the king or the rook previously moved?
+	if (!model.canCastle(castling_type, player))
+		return false;
+	
+	// is there any piece between the king and the rook?
+	if (!isPathFree(board, src, rook_square))
+		return false;
+	
+	// is the player performing the castling currently in check?
+	Player opponent = player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
+	if (doesPlayerAttackSquare(board, src, opponent))
+		return false;
+	
+	// is the square the king passes over currently attacked?
+	Coord file_step = castling_type == KINGSIDE ? +1 : -1;
+	Coord file_passing_by = src.getFile() + file_step;
+	Square square_passing_by = Square(src.getRank(), file_passing_by);
+	if (doesPlayerAttackSquare(board, square_passing_by, opponent))
+		return false;
+	
+	return true;
+}
+
+bool Rules::isEnPassantLegal(const GameModel &model, Square src, Square dest) {
+	return false;
+}
+
+bool Rules::isRegularMoveLegal(const GameModel &model, Square src, Square dest, bool capture_flag) {
+	
+	const Board &board = model.getBoard();
+	Piece src_piece = board.getPiece(src);
+	Piece dest_piece = board.getPiece(dest);
+	
+	// can the piece actually move there (ignoring other pieces on the board)?
+	if (!isSquareInRange(board, src, dest, capture_flag))
+		return false;
 	
 	// capturing moves
-	if (move.capture_flag) {
-		if (move.castling_flag)
+	if (capture_flag) {
+		if (dest_piece.getType() == TYPE_NONE)
 			return false;
-		if (move.en_passant_flag) {
-			// TODO en passant capture
+		if (src_piece.getPlayer() == dest_piece.getPlayer())
 			return false;
-		} else {
-			if (dest_piece.getType() == TYPE_NONE)
-				return false;
-			bool whites_turn = move.player == PLAYER_WHITE;
-			Player opponent = whites_turn ? PLAYER_BLACK : PLAYER_WHITE;
-			if (dest_piece.getPlayer() != opponent)
-				return false;
-		}
 	} else {
 		// target square must be empty for non-capture moves
 		if (dest_piece.getType() != TYPE_NONE)
 			return false;
 	}
 	
-	// en passant moves must be a capture
-	if (move.en_passant_flag)
-		return false;
+	// check whether the path between src and dest is actually free
+	if (src_piece.getType() != TYPE_KNIGHT)
+		if (!isPathFree(board, src, dest))
+			return false;
 	
-	// castling
-    if (move.castling_flag) {
-        if (src_piece.getType() != TYPE_KING)
-            return false; // only kings can castle
-
-        /// @todo check, whether the rook or the king have previously moved
-
-        /// @todo check, whether there're any pieces between king and rook
-
-        /// @todo check, whether the king is currently in check
-        /// @todo check, whether the king moves through an attacked square
-        /// @todo check, whether the king ends up in check
-
-        return false; // no castlings until fully implemented
-    }
-
-	// we have to not be in check after our turn
-    GameModel result = model; // explicitly copy the current position
-	result.move(move);
-	if (isPlayerInCheck(result.getBoard(), move.player))
-		return false;
-	
-	// passed all tests
 	return true;
+}
+
+Square Rules::getKingStartingSquare(const Board &board, Player player) {
+	if (player == PLAYER_WHITE)
+		return Square(0, 4);
+	else if (player == PLAYER_BLACK)
+		return Square(board.getHeight() - 1, 4);
+	else
+		return Square::INVALID;
+}
+
+Square Rules::getRookStartingSquare(const Board &board, Player player, CastlingType type) {
+	Coord rank, file;
+	if (player == PLAYER_WHITE)
+		rank = 0;
+	else if (player == PLAYER_BLACK)
+		rank = board.getHeight() - 1;
+	else
+		return Square::INVALID;
+	if (type == KINGSIDE)
+		file = board.getWidth() - 1;
+	else if (type == QUEENSIDE)
+		file = 0;
+	else
+		return Square::INVALID;
+	return Square(rank, file);
 }
 
 bool Rules::isPlayerInCheck(const Board &board, Player player) {
@@ -156,8 +235,8 @@ bool Rules::isPlayerInCheck(const Board &board, Player player) {
 
 bool Rules::doesPlayerAttackSquare(const Board &board, Square square, Player player) {
 	// en passant capture is completely ignored for this function.
-	static const Coord rank_steps[] = {-1, -1, -1,  0,  0,  0, +1, +1, +1};
-	static const Coord file_steps[] = {-1,  0, +1, -1,  0, +1, -1,  0, +1};
+	static const Coord rank_steps[] = {-1, -1, -1,  0,  0, +1, +1, +1};
+	static const Coord file_steps[] = {-1,  0, +1, -1, +1, -1,  0, +1};
 	
 	// for all eight directions
 	for (int i = 0; i < 8; ++i) {
@@ -171,7 +250,7 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Square square, Player pla
 			// ...or we find a piece in our way.
 			if (piece.getType() != TYPE_NONE) {
 				bool is_opponent = piece.getPlayer() == player;
-				bool can_reach_me = isSquareInRange(board, square, dest, true);
+				bool can_reach_me = isSquareInRange(board, dest, square, true);
 				if (is_opponent && can_reach_me) {
 					return true;
 				} else {
@@ -185,18 +264,18 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Square square, Player pla
 	} // for each of the eight direction
 	
 	// check for knights
-	Coord rank_knight_steps[] = {-1, -1, +1, +1, -2, -2, +2, +2};
-	Coord file_knight_steps[] = {-2, +2, -2, +2, -1, +1, -1, +1};
+	static const Coord rank_knight_steps[] = {-1, -1, +1, +1, -2, -2, +2, +2};
+	static const Coord file_knight_steps[] = {-2, +2, -2, +2, -1, +1, -1, +1};
 	for (int i = 0; i < 8; ++i) {
-		Coord rank = square.getRank() + rank_steps[i];
-		Coord file = square.getFile() + file_steps[i];
+		Coord rank = square.getRank() + rank_knight_steps[i];
+		Coord file = square.getFile() + file_knight_steps[i];
 		Square dest = Square(rank, file);
 		if (!board.isInBound(dest))
 			continue;
 		Piece piece = board.getPiece(dest);
 		if (piece.getType() != TYPE_NONE) {
 			bool is_opponent = piece.getPlayer() == player;
-			bool can_reach_me = isSquareInRange(board, square, dest, true);
+			bool can_reach_me = isSquareInRange(board, dest, square, true);
 			if (is_opponent && can_reach_me) {
 				return true;
 			}
@@ -236,7 +315,6 @@ bool Rules::isPathFree(const Board &board, Square src, Square dest) {
 	Coord file = src.getFile() + file_step;
 	
 	while (rank != dest.getRank() || file != dest.getFile()) {
-		Square square = Square(rank, file);
 		Piece piece = board.getPiece(rank, file);
 		if (piece.getType() != TYPE_NONE)
 			return false;
@@ -301,6 +379,10 @@ bool Rules::isSquareInRange(const Board &board, Square src, Square dest, bool ca
 			return false;
 		}
 	} // case TYPE_PAWN
+	/*case TYPE_KING:
+		if (castling_flag)
+			return d_rank == 0 && d_file * d_file == 4;
+		// intentional falltrough*/
     default:
         return isSquareInRange(piece.getType(), d_rank, d_file);
 	} // switch (piece.getType())

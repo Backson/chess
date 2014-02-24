@@ -6,9 +6,14 @@
 #define GameModel_h
 
 #include "types.h"
-class Board;
+#include "Board.h"
 class Move;
 class Square;
+
+enum CastlingType {
+	QUEENSIDE,
+	KINGSIDE,
+};
 
 enum GameState
 {
@@ -25,11 +30,10 @@ class GameModel
 public:
     // LIFECYCLE
     GameModel();
-    ~GameModel();
     GameModel(const GameModel& other);
     GameModel& operator=(const GameModel& other);
 
-    GameModel(const Board& board, GameState gameState, Coord enPassantChanceFile = -1);
+    GameModel(const Board& board, GameState game_state, Coord en_passant_file_chance = -1);
 
     // OPERATORS
     bool operator==(const GameModel& other) const;
@@ -40,16 +44,21 @@ public:
     Board& getBoard();
     GameState getGameState() const;
     bool isPlaying() const;
+	Player getActivePlayer() const;
+	
+	Coord getEnPassantFile() const;
+	bool canCastle(CastlingType type, Player player) const;
 
     // OPERATIONS
     void start();
     void move(const Move& move);
 
 private:
-    Board* board;
-    GameState gameState;
+    Board _board;
+    GameState _game_state;
 
-    Coord enPassantChanceFile;
+    Coord _en_passant_file_chance;
+	bool _castling_chances[2][2]; // ...[player][castling_type]
 };
 
 #endif // GameModel_h

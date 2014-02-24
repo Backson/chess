@@ -226,9 +226,23 @@ bool Board::isInBound(Square square) const
 
 // ================================================================
 
-Board Board::factoryStandard()
-{
-    DEFINE_PIECE_SHORTCUTS;
+static const Piece K = Piece(PLAYER_WHITE | TYPE_KING);
+static const Piece Q = Piece(PLAYER_WHITE | TYPE_QUEEN);
+static const Piece R = Piece(PLAYER_WHITE | TYPE_ROOK);
+static const Piece B = Piece(PLAYER_WHITE | TYPE_BISHOP);
+static const Piece N = Piece(PLAYER_WHITE | TYPE_KNIGHT);
+static const Piece P = Piece(PLAYER_WHITE | TYPE_PAWN);
+
+static const Piece k = Piece(PLAYER_BLACK | TYPE_KING);
+static const Piece q = Piece(PLAYER_BLACK | TYPE_QUEEN);
+static const Piece r = Piece(PLAYER_BLACK | TYPE_ROOK);
+static const Piece b = Piece(PLAYER_BLACK | TYPE_BISHOP);
+static const Piece n = Piece(PLAYER_BLACK | TYPE_KNIGHT);
+static const Piece p = Piece(PLAYER_BLACK | TYPE_PAWN);
+
+static const Piece _ = Piece(PLAYER_WHITE | TYPE_NONE);
+
+Board Board::factoryStandard() {
     Piece pieces[BOARD_HEIGHT][BOARD_WIDTH] =
            /* ******************************** */
            /*   *     A B C D E F G H      *   */
@@ -245,9 +259,7 @@ Board Board::factoryStandard()
     return Board(pieces);
 }
 
-Board Board::factoryEmpty()
-{
-    DEFINE_PIECE_SHORTCUTS;
+Board Board::factoryEmpty() {
     Piece pieces[BOARD_HEIGHT][BOARD_WIDTH] =
            /* ******************************** */
            /*   *     A B C D E F G H      *   */
@@ -264,8 +276,7 @@ Board Board::factoryEmpty()
     return Board(pieces);
 }
 
-bool Board::isStepSizeLegal(Coord rank_step, Coord file_step)
-{
+bool Board::isStepSizeLegal(Coord rank_step, Coord file_step) {
     if (rank_step < -1 || 1 < rank_step)
         return false;
 
