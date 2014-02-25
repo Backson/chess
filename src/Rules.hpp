@@ -65,6 +65,14 @@ public:
 	 * undefined.
 	 */
     bool isSquareInRange(Type type, Tile d);
+	
+	/**
+	 */
+	bool hasLegalMove(const GameModel &, Tile);
+	
+	/**
+	 */
+	bool hasLegalMove(const GameModel &, Tile, Tile);
 };
 
 #endif // RULES_HPP

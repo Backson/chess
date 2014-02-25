@@ -33,10 +33,10 @@ public:
     void draw(float x, float y, const GameModel &model, Tile selection);
 
 private:
-    void drawPanel(float x, float y, const Board &board, Tile selection);
+    void drawPanel(float x, float y, const GameModel &model, Tile selection);
     void drawBorder(float x, float y);
     void drawBorderDecoration(float x, float y);
-    void drawBoard(float x, float y, const Board &board, Tile selection);
+    void drawBoard(float x, float y, const GameModel &model, Tile selection);
     void drawPiece(float x, float y, const Piece &piece, int whichTile);
     void drawSelection(float x, float y);
 	void drawCursor(float x, float y);

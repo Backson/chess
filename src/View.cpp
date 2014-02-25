@@ -5,6 +5,8 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_color.h>
 
+#include "Rules.hpp"
+
 bool isSideway(Orientation orientation) {
 	switch (orientation) {
 		case WHITE_ON_TOP:
@@ -36,10 +38,11 @@ View::~View() {
 }
 
 void View::draw(float x, float y, const GameModel &model, Tile selection) {
-	drawPanel(x, y, model.getBoard(), selection);
+	drawPanel(x, y, model, selection);
 }
 
-void View::drawPanel(float x, float y, const Board &board, Tile selection) {
+void View::drawPanel(float x, float y, const GameModel &model, Tile selection) {
+	const Board &board = model.getBoard();
 	_x = x;
 	_y = y;
 	_board = board;
@@ -51,7 +54,7 @@ void View::drawPanel(float x, float y, const Board &board, Tile selection) {
 		}
 	}
 	const float border = getBorderSizePixels();
-	drawBoard(x + border, y + border, board, selection);
+	drawBoard(x + border, y + border, model, selection);
 }
 
 void View::drawBorder(float x, float y) {
@@ -78,7 +81,8 @@ void View::drawBorderDecoration(float x, float y) {
 	// TODO implement
 }
 
-void View::drawBoard(float x, float y, const Board& board, Tile selection) {
+void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
+	const Board &board = model.getBoard();
 	ALLEGRO_MOUSE_STATE mouse;
 	al_get_mouse_state(&mouse);
 	Tile cursor = getTileAt(mouse.x, mouse.y);
@@ -98,7 +102,12 @@ void View::drawBoard(float x, float y, const Board& board, Tile selection) {
 				drawSelection(piece_x, piece_y);
 			}
 			if (algebraic == cursor) {
-				drawCursor(piece_x, piece_y);
+				Rules rules;
+				bool has_sel = board.isInBound(selection);
+				if (has_sel && rules.hasLegalMove(model, selection, cursor))
+					drawCursor(piece_x, piece_y);
+				if (rules.hasLegalMove(model, cursor))
+					drawCursor(piece_x, piece_y);
 			}
 		}
 }

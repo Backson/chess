@@ -172,9 +172,9 @@ int main(int argc, char** argv)
 						goto NEXT_EVENT;
 					}
 					
+					Rules rules;
 					if (board.isInBound(selection)) {
 						Action action;
-						Rules rules;
 						action = rules.examineMove(*pc.model, selection, tile);
 						bool is_legal = rules.isActionLegal(*pc.model, action);
 						if (is_legal) {
@@ -183,11 +183,10 @@ int main(int argc, char** argv)
 							goto NEXT_EVENT;
 						}
 					}
-					
-					if (board[tile].type == TYPE_NONE)
-						selection = board.INVALID_TILE;
-					else
+					if (rules.hasLegalMove(*pc.model, tile))
 						selection = tile;
+					else
+						selection = board.INVALID_TILE;
 				}
 				break;
 			}
@@ -227,6 +226,7 @@ int main(int argc, char** argv)
 		al_set_target_backbuffer(al_get_current_display());
 		pc.view->draw(0.0, 0.0, *pc.model, selection);
 		al_flip_display();
+		al_rest(0.01);
 	} // main loop
 
 	finilize(&pc);

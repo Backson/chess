@@ -95,5 +95,6 @@
     <File Name="src/View.cpp"/>
     <File Name="src/View.hpp"/>
     <File Name="src/Action.hpp"/>
+    <File Name="src/Action.cpp"/>
   </VirtualDirectory>
 </CodeLite_Project>

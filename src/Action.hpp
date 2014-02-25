@@ -47,4 +47,7 @@ struct Action {
 	Type promotion;
 };
 
+bool operator==(const Action &, const Action &);
+bool operator!=(const Action &, const Action &);
+
 #endif // ACTION_HPP

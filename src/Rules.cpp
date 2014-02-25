@@ -374,3 +374,19 @@ bool Rules::isSquareInRange(Type type, Tile d) {
         return false; // illegal piece type
     }
 }
+
+bool Rules::hasLegalMove(const GameModel &model, Tile src) {
+	const Board &board = model.getBoard();
+	for (int8 y = 0; y < board.height(); ++y) {
+		for (int8 x = 0; x < board.width(); ++x) {
+			if (hasLegalMove(model, src, Tile(x, y)))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool Rules::hasLegalMove(const GameModel &model, Tile src, Tile dst) {
+	Action action = examineMove(model, src, dst);
+	return isActionLegal(model, action);
+}
