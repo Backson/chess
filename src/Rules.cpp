@@ -144,7 +144,31 @@ bool Rules::isCastlingLegal(const GameModel &model, Action a) {
 }
 
 bool Rules::isEnPassantLegal(const GameModel &model, Action a) {
-	return false;
+	const Board &board = model.getBoard();
+	
+	// only pawns can capture en passant
+	if (board[a.src].type != TYPE_PAWN)
+		return false;
+	
+	// the pawn must be able to reach dst by a capture move
+	if (!isSquareInRange(board, a.src, a.dst, true))
+		return false;
+	
+	// but that tile needs to be empty
+	if (board[a.dst] != Piece::NONE)
+		return false;
+	
+	// there needs to be an enemy pawn that has passed the current pawn
+	Tile opponent_pawn = Tile(a.dst[0], a.src[1]);
+	Player opponent = a.player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
+	if (board[opponent_pawn] != Piece{opponent, TYPE_PAWN})
+		return false;
+	
+	// there needs to be an en passant chance in that particular column
+	if (model.getEnPassantChanceFile() != a.dst[0])
+		return false;
+	
+	return true;
 }
 
 bool Rules::isRegularMoveLegal(const GameModel &model, Action a) {

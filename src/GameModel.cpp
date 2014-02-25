@@ -133,6 +133,12 @@ void GameModel::action(const Action& a) {
 		_castling_chances[a.player][QUEENSIDE] = false;
 	}
 
+	if (_board[a.src].type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
+		_en_passant_chance_file = a.dst[0];
+	} else {
+		_en_passant_chance_file = -1;
+	}
+
 	if (a.type == CASTLING) {
 		int8 sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
 		Tile rook_src = Tile((int8)(sx > 0 ? _board.width() - 1 : 0), home_row);
@@ -153,6 +159,10 @@ void GameModel::action(const Action& a) {
 	
 	if (a.promotion != TYPE_NONE) {
 		_board[a.dst] = Piece{_board[a.dst].player, a.promotion};
+	}
+	
+	if (a.type == EN_PASSANT) {
+		_board.removePiece(Tile(a.dst[0], a.src[1]));
 	}
 	
     _game_state = _game_state == STATE_WHITE_TURN ? STATE_BLACK_TURN : STATE_WHITE_TURN;
