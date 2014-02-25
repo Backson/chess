@@ -248,7 +248,7 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Tile tile, Player p) {
 	static const int8 sx_knight[] = {-1, -1, +1, +1, -2, -2, +2, +2};
 	static const int8 sy_knight[] = {-2, +2, -2, +2, -1, +1, -1, +1};
 	for (int i = 0; i < 8; ++i) {
-		Tile knight = Tile(sx_knight[i], sy_knight[i]);
+		Tile knight = tile + Tile(sx_knight[i], sy_knight[i]);
 		if (!board.isInBound(knight))
 			continue;
 		if (board[knight].type != TYPE_NONE) {
