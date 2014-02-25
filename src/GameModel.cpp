@@ -128,26 +128,23 @@ void GameModel::action(const Action& a) {
 
 	int8 home_row = a.player == PLAYER_WHITE ? 0 : _board.height() - 1;
 
-	if (a.type == CASTLING) {
-		int8 sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
-		Tile king_src = Tile((int8)(_board.width() / 2), home_row);
-		Tile king_dst = Tile((int8)(_board.width() / 2 + 2 * sx), home_row);
-		Tile rook_src = Tile((int8)(sx > 0 ? _board.width() - 1 : 0), home_row);
-		Tile rook_dst = king_src + Tile(sx, (int8)0);
-		_board.movePiece(king_src, king_dst);
-		_board.movePiece(rook_src, rook_dst);
+	if (_board[a.src].type == TYPE_KING) {
 		_castling_chances[a.player][KINGSIDE] = false;
 		_castling_chances[a.player][QUEENSIDE] = false;
+	}
+
+	if (a.type == CASTLING) {
+		int8 sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
+		Tile rook_src = Tile((int8)(sx > 0 ? _board.width() - 1 : 0), home_row);
+		Tile rook_dst = a.src + Tile(sx, (int8)0);
+		_board.movePiece(a.src, a.dst);
+		_board.movePiece(rook_src, rook_dst);
 	} else {
-		if (_board[a.src].type == TYPE_KING) {
-			_castling_chances[a.player][KINGSIDE] = false;
-			_castling_chances[a.player][QUEENSIDE] = false;
-		}
 		for (int player = 0; player < 2; ++player)
 			for (int castling = 0; castling < 2; ++castling) {
 				int8 x = castling == KINGSIDE ? _board.width() - 1 : 0;
 				int8 y = player == PLAYER_WHITE ? 0 : _board.height() - 1;
-				if (a.src == Tile(x, y))
+				if (a.src == Tile(x, y) || a.dst == Tile(x, y))
 					_castling_chances[player][castling] = false;
 			}
 		
