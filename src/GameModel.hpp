@@ -1,19 +1,8 @@
-/** @file GameModel.h
- *
- */
+#ifndef GAME_MODEL_HPP
+#define GAME_MODEL_HPP
 
-#ifndef GameModel_h
-#define GameModel_h
-
-#include "types.h"
-#include "Board.h"
-class Move;
-class Square;
-
-enum CastlingType {
-	QUEENSIDE,
-	KINGSIDE,
-};
+#include "Action.hpp"
+#include "Board.hpp"
 
 enum GameState
 {
@@ -33,7 +22,7 @@ public:
     GameModel(const GameModel& other);
     GameModel& operator=(const GameModel& other);
 
-    GameModel(const Board& board, GameState game_state, Coord en_passant_file_chance = -1);
+    GameModel(const Board& board, GameState game_state, int en_passant_chance_file = -1);
 
     // OPERATORS
     bool operator==(const GameModel& other) const;
@@ -46,19 +35,19 @@ public:
     bool isPlaying() const;
 	Player getActivePlayer() const;
 	
-	Coord getEnPassantFile() const;
+	int getEnPassantChanceFile() const;
 	bool canCastle(CastlingType type, Player player) const;
 
     // OPERATIONS
     void start();
-    void move(const Move& move);
+    void action(const Action& action);
 
 private:
     Board _board;
     GameState _game_state;
 
-    Coord _en_passant_file_chance;
+    int _en_passant_chance_file;
 	bool _castling_chances[2][2]; // ...[player][castling_type]
 };
 
-#endif // GameModel_h
+#endif // GAME_MODEL_HPP

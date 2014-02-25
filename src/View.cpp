@@ -1,20 +1,9 @@
-/** @file View.cpp
- *
- */
-
-#include "View.h"
+#include "View.hpp"
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_color.h>
-
-#include "GameModel.h"
-#include "Board.h"
-#include "constants.h"
-#include "Move.h"
-#include "Piece.h"
-#include "Rules.h"
 
 bool isSideway(Orientation orientation) {
 	switch (orientation) {
@@ -37,8 +26,8 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 	_x = 0.0;
 	_y = 0.0;
 	_board = Board(board_width, board_height);
-	_selection = Square(-1, -1);
-	_cursor = Square(-1, -1);
+	_selection = Tile((int8)-1, (int8)-1);
+	_cursor = Tile((int8)-1, (int8)-1);
 	_buffer = al_create_bitmap(getPanelWidthPixels(), getPanelHeightPixels());
 }
 
@@ -46,11 +35,11 @@ View::~View() {
     al_destroy_bitmap(_buffer);
 }
 
-void View::draw(float x, float y, const GameModel &model, Square selection) {
+void View::draw(float x, float y, const GameModel &model, Tile selection) {
 	drawPanel(x, y, model.getBoard(), selection);
 }
 
-void View::drawPanel(float x, float y, const Board &board, Square selection) {
+void View::drawPanel(float x, float y, const Board &board, Tile selection) {
 	_x = x;
 	_y = y;
 	_board = board;
@@ -89,37 +78,34 @@ void View::drawBorderDecoration(float x, float y) {
 	// TODO implement
 }
 
-void View::drawBoard(float x, float y, const Board& board, Square selection) {
+void View::drawBoard(float x, float y, const Board& board, Tile selection) {
 	ALLEGRO_MOUSE_STATE mouse;
 	al_get_mouse_state(&mouse);
-	Square cursor = getSquareAt(mouse.x, mouse.y);
+	Tile cursor = getTileAt(mouse.x, mouse.y);
 	
-    for (int rank = 0; rank < board.getHeight(); ++rank)
-	for (int file = 0; file < board.getWidth(); ++file)
-	{
-		Square algebraic = Square(rank, file);
-		Square displayed = convertAlgebraicToDisplayed(algebraic);
-		float piece_x = x + displayed.getFile() * getTileSizePixels();
-		float piece_y = y + displayed.getRank() * getTileSizePixels();
-		const Piece& piece = board.getPiece(algebraic);
-		Tile whichTile = (rank + file) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
-		drawPiece(piece_x, piece_y, piece, whichTile);
-		
-		if (algebraic == selection) {
-			drawSelection(piece_x, piece_y);
-		}
-		if (algebraic == cursor) {
-			if (board.getPiece(cursor).getType() != TYPE_NONE)
+    for (int8 yy = 0; yy < board.height(); ++yy)
+		for (int8 xx = 0; xx < board.width(); ++xx)
+		{
+			Tile algebraic = Tile(xx, yy);
+			Tile displayed = convertAlgebraicToDisplayed(algebraic);
+			float piece_x = x + displayed[0] * getTileSizePixels();
+			float piece_y = y + displayed[1] * getTileSizePixels();
+			const Piece& piece = board[algebraic];
+			TileColor tile_color = (xx + yy) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
+			drawPiece(piece_x, piece_y, piece, tile_color);
+			
+			if (algebraic == selection) {
+				drawSelection(piece_x, piece_y);
+			}
+			if (algebraic == cursor) {
 				drawCursor(piece_x, piece_y);
+			}
 		}
-	}
 }
 
-void View::drawPiece(float x, float y, const Piece& piece, int whichTile) {
-    int player = piece.getPlayer() == PLAYER_WHITE ? 0 : 1;
-	Type type = piece.getType();
-    ALLEGRO_BITMAP* image = _image_tile[type][player][whichTile];
-
+void View::drawPiece(float x, float y, const Piece& piece, int tile_color) {
+	Player player = piece.type == TYPE_NONE ? PLAYER_WHITE : piece.player;
+    ALLEGRO_BITMAP* image = _image_tile[piece.type + 1][player][tile_color];
     al_draw_bitmap(image, x, y, 0);
 }
 
@@ -181,51 +167,51 @@ float View::getBoardHeightPixels() const {
 	return height * getTileSizePixels();
 }
 
-Square View::convertAlgebraicToDisplayed(Square algebraic) const {
+Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {
     switch (_orientation)
     {
 		case WHITE_AT_THE_BOTTOM: {
-			Coord rank = BOARD_HEIGHT - algebraic.getRank() - 1;
-			Coord file = algebraic.getFile();
-			return Square(rank, file);
+			int8 y = _board_height - algebraic[1] - 1;
+			int8 x = algebraic[0];
+			return Tile(x, y);
 		}
 		case WHITE_ON_TOP: {
-			Coord rank = algebraic.getRank();
-			Coord file = BOARD_WIDTH - algebraic.getFile() - 1;
-			return Square(rank, file);
+			int8 y = algebraic[1];
+			int8 x = _board_width - algebraic[0] - 1;
+			return Tile(x, y);
 		}
 		case WHITE_ON_THE_LEFT: {
-			Coord rank = algebraic.getFile();
-			Coord file = algebraic.getRank();
-			return Square(rank, file);
+			int8 y = algebraic[0];
+			int8 x = algebraic[1];
+			return Tile(x, y);
 		}
 		case WHITE_ON_THE_RIGHT: {
-			Coord rank = BOARD_WIDTH - algebraic.getFile() - 1;
-			Coord file = BOARD_HEIGHT - algebraic.getRank() - 1;
-			return Square(rank, file);
+			int8 y = _board_width - algebraic[0] - 1;
+			int8 x = _board_height - algebraic[1] - 1;
+			return Tile(x, y);
 		}
 		default:
 			assert (false);
     } // switch (rotation)
 }
 
-Square View::convertDisplayedToAlgebraic(Square displayed) const {
+Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
     switch (_orientation)
     {
 		case WHITE_AT_THE_BOTTOM: {
-			Coord rank = BOARD_HEIGHT - displayed.getRank() - 1;
-			Coord file = displayed.getFile();
-			return Square(rank, file);
+			int8 y = _board_height - displayed[1] - 1;
+			int8 x = displayed[0];
+			return Tile(x, y);
 		}
 		case WHITE_ON_TOP: {
-			Coord rank = displayed.getRank();
-			Coord file = BOARD_WIDTH - displayed.getFile() - 1;
-			return Square(rank, file);
+			int8 y = displayed[1];
+			int8 x = _board_width - displayed[0] - 1;
+			return Tile(x, y);
 		}
 		case WHITE_ON_THE_LEFT: {
-			Coord rank = displayed.getFile();
-			Coord file = displayed.getRank();
-			return Square(rank, file);
+			int8 y = displayed[0];
+			int8 x = displayed[1];
+			return Tile(x, y);
 		}
 		case WHITE_ON_THE_RIGHT: {
 			/* this is NOT copy&paste from the function above.  Here the
@@ -233,28 +219,28 @@ Square View::convertDisplayedToAlgebraic(Square displayed) const {
 			 * coordinate transformation is a rotation and a translation
 			 * and both operations have to switch orders when tranforming back.
 			 */
-			Coord rank = BOARD_HEIGHT - displayed.getFile() - 1;
-			Coord file = BOARD_WIDTH - displayed.getRank() - 1;
-			return Square(rank, file);
+			int8 y = _board_height - displayed[0] - 1;
+			int8 x = _board_width - displayed[1] - 1;
+			return Tile(x, y);
 		}
 		default:
 			assert (false);
     } // switch (rotation)
 }
 
-Square View::getSquareAt(float x, float y) {
+Tile View::getTileAt(float x, float y) {
     float dx = x - getBorderSizePixels() - _x;
     float dy = y - getBorderSizePixels() - _y;
 	
     if (dx >= getBoardWidthPixels() || dx < 0
 		|| dy >= getBoardHeightPixels() || dy < 0)
     {
-        return Square(-1, -1);
+        return Tile((int8)-1, (int8)-1);
     }
 	
 	auto tile_size = getTileSizePixels();
-	Square displayed = Square(dy / tile_size, dx / tile_size);
-	Square algebraic = convertDisplayedToAlgebraic(displayed);
+	Tile displayed = Tile((int8)(dx / tile_size), (int8)(dy / tile_size));
+	Tile algebraic = convertDisplayedToAlgebraic(displayed);
 	return algebraic;
 }
 
@@ -270,12 +256,12 @@ int View::initialize() {
 	// activate alpha blending
 	al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
 
-    for (int type = 0; type < 7; ++type)
+    for (int type = -1; type < 6; ++type)
 	for (int player = 0; player < 2; ++player)
 	for (int tile = 0; tile < 2; ++tile)
 	{
 		// background
-		ALLEGRO_BITMAP** i = &_image_tile[type][player][tile];
+		ALLEGRO_BITMAP** i = &_image_tile[type + 1][player][tile];
 		*i = al_create_bitmap(_tile_size, _tile_size);
 		al_set_target_bitmap(*i);
 		al_draw_bitmap_region(
@@ -289,7 +275,7 @@ int View::initialize() {
 		if (type != TYPE_NONE)
 			al_draw_bitmap_region(
 					tile_map, /* source image */
-					tile_size * type, /* source image coord */
+					tile_size * (type + 1), /* source image coord */
 					tile_size * player,
 					tile_size, tile_size, /* source image size */
 					0.0, 0.0, /* destination image coord */

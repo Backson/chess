@@ -1,21 +1,13 @@
-/** @file View.h
- *
- */
-
-#ifndef View_h
-#define View_h
+#ifndef VIEW_HPP
+#define VIEW_HPP
 
 #include <allegro5/allegro.h>
 
-#include "GameModel.h"
-#include "Board.h"
-#include "Piece.h"
-#include "Square.h"
-#include "types.h"
+#include "GameModel.hpp"
 
 #define TILE_SIZE 50;
 
-enum Tile {
+enum TileColor {
 	TILE_LIGHT,
 	TILE_DARK,
 };
@@ -38,13 +30,13 @@ public:
 		Orientation orientation, float border_size);
     ~View();
 
-    void draw(float x, float y, const GameModel &model, Square selection);
+    void draw(float x, float y, const GameModel &model, Tile selection);
 
 private:
-    void drawPanel(float x, float y, const Board &board, Square selection);
+    void drawPanel(float x, float y, const Board &board, Tile selection);
     void drawBorder(float x, float y);
     void drawBorderDecoration(float x, float y);
-    void drawBoard(float x, float y, const Board &board, Square selection);
+    void drawBoard(float x, float y, const Board &board, Tile selection);
     void drawPiece(float x, float y, const Piece &piece, int whichTile);
     void drawSelection(float x, float y);
 	void drawCursor(float x, float y);
@@ -60,10 +52,10 @@ public:
 	int getBoardWidth() const;
 	int getBoardHeight() const;
 
-	Square convertAlgebraicToDisplayed(Square) const;
-	Square convertDisplayedToAlgebraic(Square) const;
+	Tile convertAlgebraicToDisplayed(Tile) const;
+	Tile convertDisplayedToAlgebraic(Tile) const;
 
-    Square getSquareAt(float x, float y);
+    Tile getTileAt(float x, float y);
 
     static int initialize();
     static void deinitialize();
@@ -84,9 +76,9 @@ private:
 	/// The board that was last drawn
     Board _board;
 	/// which selection was drawn last frame (invalid if none was drawn)
-    Square _selection;
+    Tile _selection;
 	/// where the cursor was drawn last frame (invalid if none was drawn)
-    Square _cursor;
+    Tile _cursor;
 	/// draw all the frames here (dirty rect) and blit this to target
 	ALLEGRO_BITMAP* _buffer;
 
@@ -98,4 +90,4 @@ private:
     static ALLEGRO_BITMAP* _image_tile[7][2][2]; // type, player, tile
 };
 
-#endif // View_h
+#endif // VIEW_HPP

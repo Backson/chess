@@ -1,7 +1,3 @@
-/** @file main.cpp
- *
- */
-
 #include <stdio.h>
 
 #include <allegro5/allegro.h>
@@ -9,46 +5,11 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_color.h>
 
-#include "View.h"
-#include "Board.h"
-#include "Move.h"
-#include "Piece.h"
-#include "Rules.h"
-
-void printTypeInformation()
-{
-    #ifdef PRINT_INT
-      #warning macro PRINT_INT is overwritten
-      #undef PRINT_INT
-    #endif
-    #define PRINT_INT(expr, format) printf( #expr " == " format "\n", expr)
-
-    PRINT_INT(sizeof(Type), "%lu");
-    PRINT_INT(sizeof(Player), "%lu");
-    PRINT_INT(sizeof(BitwisePiece), "%lu");
-    PRINT_INT(sizeof(Piece), "%lu");
-    printf("\n");
-    PRINT_INT(sizeof(Coord), "%lu");
-    PRINT_INT(sizeof(BitwiseSquare), "%lu");
-    PRINT_INT(sizeof(Square), "%lu");
-    printf("\n");
-    PRINT_INT(sizeof(Rules), "%lu");
-    PRINT_INT(sizeof(Move), "%lu");
-    printf("\n");
-    PRINT_INT(TYPE_MASK, "0x%X");
-    PRINT_INT(PLAYER_MASK, "0x%X");
-    PRINT_INT(RANK_MASK, "0x%X");
-    PRINT_INT(FILE_MASK, "0x%X");
-    printf("\n");
-    #if BITWISE_TYPES
-      printf("BITWISE_TYPES is set.\n");
-    #else
-      printf("BITWISE_TYPES is not set.\n");
-    #endif
-
-    #undef PRINT_INT
-
-}
+#include "View.hpp"
+#include "Board.hpp"
+#include "Action.hpp"
+#include "Piece.hpp"
+#include "Rules.hpp"
 
 struct ProgramContext {
 	ALLEGRO_DISPLAY *display;
@@ -174,7 +135,7 @@ int main(int argc, char** argv)
 	pc.model->start();
 	
 	bool shutdown = false;
-	Square selection = Square(-1, -1);
+	Tile selection = Tile((int8)-1, (int8)-1);
 	ALLEGRO_MOUSE_STATE mouse;
 	while (true) {
 		// fetch all events in the queue and process them in order
@@ -203,30 +164,30 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
-				Square square = pc.view->getSquareAt(mouse.x, mouse.y);
+				const Board &board = pc.model->getBoard();
+				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
 				if (ev.mouse.button == 1) {
-					if (!square.isValid() || square == selection) {
-						selection = Square::INVALID;
+					if (!board.isInBound(tile) || tile == selection) {
+						selection = board.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 					
-					if (selection.isValid()) {
-						Move move;
+					if (board.isInBound(selection)) {
+						Action action;
 						Rules rules;
-						move = rules.examineMove(*pc.model, selection, square);
-						bool is_legal = rules.isMoveLegal(*pc.model, move);
+						action = rules.examineMove(*pc.model, selection, tile);
+						bool is_legal = rules.isActionLegal(*pc.model, action);
 						if (is_legal) {
-							pc.model->move(move);
-							selection = Square::INVALID;
+							pc.model->action(action);
+							selection = board.INVALID_TILE;
 							goto NEXT_EVENT;
 						}
 					}
 					
-					Piece piece = pc.model->getBoard().getPiece(square);
-					if (piece.getType() == TYPE_NONE)
-						selection = Square::INVALID;
+					if (board[tile].type == TYPE_NONE)
+						selection = board.INVALID_TILE;
 					else
-						selection = square;
+						selection = tile;
 				}
 				break;
 			}

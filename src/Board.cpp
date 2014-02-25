@@ -1,24 +1,14 @@
-/** @file Board.cpp
- *
- */
-
-#include "Board.h"
-
-#include "constants.h"
-#include "Piece.h"
-#include "Square.h"
+#include "Board.hpp"
 
 Board::Board() :
-	_width(BOARD_WIDTH), _height(BOARD_HEIGHT)
+	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	this->_pieces[rank] = new Piece[_width];
+    for (int y = 0; y < _height; ++y) {
+    	this->_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
-        {
-            this->_pieces[rank][file] = Piece::NONE;
+        for (int x = 0; x < _width; ++x) {
+            this->_pieces[y][x] = Piece::NONE;
         }
     }
 }
@@ -27,13 +17,11 @@ Board::Board(int width, int height) :
 	_width(width), _height(height)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	this->_pieces[rank] = new Piece[_width];
+    for (int y = 0; y < _height; ++y) {
+    	this->_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
-        {
-            this->_pieces[rank][file] = Piece::NONE;
+        for (int x = 0; x < _width; ++x) {
+            this->_pieces[y][x] = Piece::NONE;
         }
     }
 }
@@ -42,43 +30,38 @@ Board::Board(const Board& other) :
 	_width(other._width), _height(other._height)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	this->_pieces[rank] = new Piece[_width];
+    for (int y = 0; y < _height; ++y) {
+    	this->_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
-        {
-            this->_pieces[rank][file] = other._pieces[rank][file];
+        for (int x = 0; x < _width; ++x) {
+            this->_pieces[y][x] = other._pieces[y][x];
         }
     }
 }
 
-Board::Board(const Piece pieces[BOARD_HEIGHT][BOARD_WIDTH]) :
-	_width(BOARD_WIDTH), _height(BOARD_HEIGHT)
+Board::Board(const Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT]) :
+	_width(BOARD_HEIGHT_DEFAULT), _height(BOARD_WIDTH_DEFAULT)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	this->_pieces[rank] = new Piece[_width];
+    for (int y = 0; y < _height; ++y) {
+    	_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
-        {
-            this->_pieces[rank][file] = pieces[rank][file];
+        for (int x = 0; x < _width; ++x) {
+            _pieces[y][x] = pieces[y][x];
         }
     }
 }
 
 Board::Board(const Piece **pieces) :
-	_width(BOARD_WIDTH), _height(BOARD_HEIGHT)
+	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	this->_pieces[rank] = new Piece[_width];
+    for (int y = 0; y < _height; ++y) {
+    	this->_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
+        for (int x = 0; x < _width; ++x)
         {
-            this->_pieces[rank][file] = pieces[rank][file];
+            this->_pieces[y][x] = pieces[y][x];
         }
     }
 }
@@ -87,163 +70,140 @@ Board::Board(const Piece **pieces, int width, int height) :
 	_width(width), _height(height)
 {
     this->_pieces = new Piece*[_height];
-    for (Coord rank = 0; rank < _height; ++rank)
+    for (int y = 0; y < _height; ++y)
     {
-    	this->_pieces[rank] = new Piece[_width];
+    	this->_pieces[y] = new Piece[_width];
 
-        for (Coord file = 0; file < _width; ++file)
+        for (int x = 0; x < _width; ++x)
         {
-            this->_pieces[rank][file] = pieces[rank][file];
+            this->_pieces[y][x] = pieces[y][x];
         }
     }
 }
 
 Board::~Board()
 {
-    for (Coord rank = 0; rank < _height; ++rank)
-    {
-    	delete[] _pieces[rank];
+    for (int y = 0; y < _height; ++y) {
+    	delete[] _pieces[y];
     }
     delete[] _pieces;
 }
 
-Board& Board::operator=(const Board& rhs)
-{
-	if (this == &rhs) return *this; // handle self assignment
+Board& Board::operator=(const Board& rhs) {
+	if (this == &rhs) return *this; // self assignment
 	
-	auto width = rhs._width;
-	auto height = rhs._height;
-	
-	bool resize = _width != width || _height != height;
+	bool resize = _width != rhs._width || _height != rhs._height;
 	if (resize) {
-		for (Coord rank = 0; rank < height; ++rank) {
-			delete[] _pieces[rank];
+		for (int y = 0; y < _height; ++y) {
+			delete[] _pieces[y];
 		}
 		delete[] _pieces;
-		_width = width;
-		_height = height;
-		this->_pieces = new Piece*[height];
+		
+		_width = rhs._width;
+		_height = rhs._height;
+		
+		_pieces = new Piece*[_height];
+		for (int y = 0; y < _height; ++y) {
+			_pieces[y] = new Piece[_width];
+		}
 	}
 	
-    for (Coord rank = 0; rank < height; ++rank)
-    {
-		if (resize) this->_pieces[rank] = new Piece[width];
-		
-        for (Coord file = 0; file < width; ++file)
-        {
-            this->_pieces[rank][file] = rhs._pieces[rank][file];
+    for (int y = 0; y < _height; ++y) {
+        for (int x = 0; x < _width; ++x) {
+            this->_pieces[y][x] = rhs._pieces[y][x];
         }
     }
     return *this;
 }
 
-bool Board::operator==(const Board& other) const
-{
-    // handle self-comparison
-    if (this == &other) return true;
+int8 Board::width() const {
+    return _width;
+}
+
+int8 Board::height() const {
+    return _height;
+}
+
+Piece Board::piece(Tile tile) const {
+	return _pieces[tile[1]][tile[0]];
+}
+
+Piece &Board::piece(Tile tile) {
+	return _pieces[tile[1]][tile[0]];
+}
+
+Piece &Board::operator[](Tile tile) const {
+	return _pieces[tile[1]][tile[0]];
+}
+
+Piece Board::operator[](Tile tile) {
+	return _pieces[tile[1]][tile[0]];
+}
+
+bool Board::operator==(const Board &other) const {
+    if (this == &other) return true; // self-comparison
 
     // handle boards of different sizes
-    if (this->getHeight() != other.getHeight()) return false;
-    if (this->getWidth() != other.getWidth()) return false;
+    if (_width != other._width) return false;
+    if (_height != other._height) return false;
 
     // compare per piece
-    for (Coord rank = 0; rank < getHeight(); ++rank)
-    {
-        for (Coord file = 0; file < getWidth(); ++file)
-        {
-            if (this->_pieces[rank][file] != other._pieces[rank][file])
+    for (int y = 0; y < _height; ++y) {
+        for (int x = 0; x < _width; ++x) {
+            if (this->_pieces[y][x] != other._pieces[y][x])
                 return false;
         }
     }
 
     return true;
 }
-bool Board::operator!=(const Board& other) const
-{
+
+bool Board::operator!=(const Board &other) const {
     return !operator==(other);
 }
 
-Piece Board::getPiece(Coord rank, Coord file) const
-{
-    if (!isInBound(rank, file))
-        return Piece::NONE;
-    return _pieces[rank][file];
+void Board::removePiece(Tile tile) {
+	piece(tile) = Piece::NONE;
 }
 
-Piece Board::getPiece(Square square) const
-{
-    // delegate
-    return getPiece(square.getRank(), square.getFile());
+void Board::movePiece(Tile src, Tile dst) {
+	piece(dst) = piece(src);
+	piece(src) = Piece::NONE;
 }
 
-void Board::setPiece(Coord rank, Coord file, Piece piece)
-{
-    if (!isInBound(rank, file)) return;
-    _pieces[rank][file] = piece;
-}
-void Board::setPiece(Square square, Piece piece)
-{
-    // delegate
-    setPiece(square.getRank(), square.getFile(), piece);
-}
-
-void Board::removePiece(Coord rank, Coord file)
-{
-    _pieces[rank][file] = Piece::NONE;
-}
-void Board::removePiece(Square square)
-{
-    removePiece(square.getRank(), square.getFile());
-}
-
-void Board::movePiece(Coord rank_src, Coord file_src, Coord rank_dest, Coord file_dest)
-{
-    _pieces[rank_dest][file_dest] = _pieces[rank_src][file_src];
-    _pieces[rank_src][file_src] = Piece::NONE;
-}
-void Board::movePiece(Square src, Square dest)
-{
-    movePiece(src.getRank(), src.getFile(), dest.getRank(), dest.getFile());
-}
-
-Coord Board::getWidth() const
-{
-    return _width;
-}
-Coord Board::getHeight() const
-{
-    return _height;
-}
-bool Board::isInBound(Coord rank, Coord file) const
-{
-    return  file >= 0 && file < getWidth()
-         && rank >= 0 && rank < getHeight();
-}
-bool Board::isInBound(Square square) const
-{
-    return  isInBound(square.getRank(), square.getFile());
+bool Board::isInBound(Tile tile) const {
+	if (tile[0] < 0)
+		return false;
+	if (tile[0] >= _width)
+		return false;
+	if (tile[1] < 0)
+		return false;
+	if (tile[1] >= _height)
+		return false;
+	return true;
 }
 
 // ================================================================
 
-static const Piece K = Piece(PLAYER_WHITE | TYPE_KING);
-static const Piece Q = Piece(PLAYER_WHITE | TYPE_QUEEN);
-static const Piece R = Piece(PLAYER_WHITE | TYPE_ROOK);
-static const Piece B = Piece(PLAYER_WHITE | TYPE_BISHOP);
-static const Piece N = Piece(PLAYER_WHITE | TYPE_KNIGHT);
-static const Piece P = Piece(PLAYER_WHITE | TYPE_PAWN);
-
-static const Piece k = Piece(PLAYER_BLACK | TYPE_KING);
-static const Piece q = Piece(PLAYER_BLACK | TYPE_QUEEN);
-static const Piece r = Piece(PLAYER_BLACK | TYPE_ROOK);
-static const Piece b = Piece(PLAYER_BLACK | TYPE_BISHOP);
-static const Piece n = Piece(PLAYER_BLACK | TYPE_KNIGHT);
-static const Piece p = Piece(PLAYER_BLACK | TYPE_PAWN);
-
-static const Piece _ = Piece(PLAYER_WHITE | TYPE_NONE);
-
 Board Board::factoryStandard() {
-    Piece pieces[BOARD_HEIGHT][BOARD_WIDTH] =
+	
+	static const Piece K = Piece{PLAYER_WHITE, TYPE_KING};
+	static const Piece Q = Piece{PLAYER_WHITE, TYPE_QUEEN};
+	static const Piece R = Piece{PLAYER_WHITE, TYPE_ROOK};
+	static const Piece B = Piece{PLAYER_WHITE, TYPE_BISHOP};
+	static const Piece N = Piece{PLAYER_WHITE, TYPE_KNIGHT};
+	static const Piece P = Piece{PLAYER_WHITE, TYPE_PAWN};
+
+	static const Piece k = Piece{PLAYER_BLACK, TYPE_KING};
+	static const Piece q = Piece{PLAYER_BLACK, TYPE_QUEEN};
+	static const Piece r = Piece{PLAYER_BLACK, TYPE_ROOK};
+	static const Piece b = Piece{PLAYER_BLACK, TYPE_BISHOP};
+	static const Piece n = Piece{PLAYER_BLACK, TYPE_KNIGHT};
+	static const Piece p = Piece{PLAYER_BLACK, TYPE_PAWN};
+
+	static const Piece _ = Piece::NONE;
+	
+    Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
            /* ******************************** */
            /*   *     A B C D E F G H      *   */
         {  /* 1 */  { R,N,B,Q,K,B,N,R },  /* 0 */
@@ -260,7 +220,8 @@ Board Board::factoryStandard() {
 }
 
 Board Board::factoryEmpty() {
-    Piece pieces[BOARD_HEIGHT][BOARD_WIDTH] =
+	static const Piece _ = Piece::NONE;
+    Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
            /* ******************************** */
            /*   *     A B C D E F G H      *   */
         {  /* 1 */  { _,_,_,_,_,_,_,_ },  /* 0 */
@@ -276,30 +237,4 @@ Board Board::factoryEmpty() {
     return Board(pieces);
 }
 
-bool Board::isStepSizeLegal(Coord rank_step, Coord file_step) {
-    if (rank_step < -1 || 1 < rank_step)
-        return false;
-
-    if (file_step < -1 || 1 < file_step)
-        return false;
-
-    if (rank_step == 0 && file_step == 0)
-        return false;
-
-    return true;
-}
-
-bool Board::isStepSizeLegal(    Coord rank_src,  Coord file_src,
-                                Coord rank_dest, Coord file_dest,
-                                Coord rank_step, Coord file_step)
-{
-    if (!isStepSizeLegal(rank_step, file_step))
-        return false;
-
-    Coord rank_d = rank_dest - rank_src;
-    Coord file_d = file_dest - file_src;
-    if (rank_d * rank_d != file_d * file_d)
-        return false;
-
-    return true;
-}
+const Tile Board::INVALID_TILE = Tile((int8)-1, (int8)-1);

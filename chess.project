@@ -7,24 +7,6 @@
   </Plugins>
   <Description/>
   <Dependencies/>
-  <VirtualDirectory Name="src">
-    <File Name="src/View.h"/>
-    <File Name="src/Board.h"/>
-    <File Name="src/constants.h"/>
-    <File Name="src/GameModel.h"/>
-    <File Name="src/Board.cpp"/>
-    <File Name="src/main.cpp"/>
-    <File Name="src/GameModel.cpp"/>
-    <File Name="src/Rules.cpp"/>
-    <File Name="src/Rules.h"/>
-    <File Name="src/Square.cpp"/>
-    <File Name="src/Piece.cpp"/>
-    <File Name="src/View.cpp"/>
-    <File Name="src/types.h"/>
-    <File Name="src/Square.h"/>
-    <File Name="src/Piece.h"/>
-    <File Name="src/Move.h"/>
-  </VirtualDirectory>
   <Settings Type="Executable">
     <Configuration Name="Debug" CompilerType="gnu g++" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g" Required="yes" PreCompiledHeader="">
@@ -97,4 +79,21 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
   </Settings>
+  <VirtualDirectory Name="src">
+    <File Name="src/Board.cpp"/>
+    <File Name="src/Board.hpp"/>
+    <File Name="src/GameModel.cpp"/>
+    <File Name="src/GameModel.hpp"/>
+    <File Name="src/main.cpp"/>
+    <File Name="src/Piece.cpp"/>
+    <File Name="src/Piece.hpp"/>
+    <File Name="src/Rules.cpp"/>
+    <File Name="src/Rules.hpp"/>
+    <File Name="src/stdtypes.hpp"/>
+    <File Name="src/vec.cpp"/>
+    <File Name="src/vec.hpp"/>
+    <File Name="src/View.cpp"/>
+    <File Name="src/View.hpp"/>
+    <File Name="src/Action.hpp"/>
+  </VirtualDirectory>
 </CodeLite_Project>

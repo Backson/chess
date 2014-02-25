@@ -1,67 +1,60 @@
-/** @file Rules.cpp
- *
- */
+#include "Rules.hpp"
 
-#include "Rules.h"
+#include "GameModel.hpp"
 
-#include "Board.h"
-#include "GameModel.h"
-#include "Move.h"
-#include "Piece.h"
-#include "Square.h"
-#include "types.h"
-
-Move Rules::examineMove(const GameModel &model, Square src, Square dest) {
-    Move m;
-
-    m.src = src;
-    m.dest = dest;
-
-    const Board& board = model.getBoard();
-
-    m.player = board.getPiece(src).getPlayer();
-
-    // check for promotion (assume queen)
-	m.promotion = TYPE_NONE;
-    if (board.getPiece(src).getType() == TYPE_PAWN) {
-        switch (m.player) {
-        case PLAYER_WHITE:
-            m.promotion = dest.getRank() == 7 ? TYPE_QUEEN : TYPE_NONE;
-            break;
-        case PLAYER_BLACK:
-            m.promotion = dest.getRank() == 0 ? TYPE_QUEEN : TYPE_NONE;
-            break;
-        default:
-            break;
-        }
-    }
-
-    m.en_passant_flag = false;
-    m.capture_flag = board.getPiece(dest).getType() != TYPE_NONE;
-    m.castling_flag = false;
-	if (board.getPiece(src).getType() == TYPE_KING) {
-		Coord file_d = m.dest.getFile() - m.src.getFile();
-		if (file_d * file_d == 4)
-			m.castling_flag = true;
+Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
+    const Board &board = model.getBoard();
+	
+	Action a;
+	
+	if (!board.isInBound(src)) {
+		a.player = PLAYER_NONE;
+		a.type = DO_NOTHING;
+		return a;
+	}
+	a.player = board[src].player;
+	if (!board.isInBound(dst)) {
+		a.type = DO_NOTHING;
+		return a;
 	}
 
-    return m;
+	a.src = src;
+	a.dst = dst;
+	
+	if (board[dst] != Piece::NONE) {
+		a.type = CAPTURE_PIECE;
+	} else if (board[src].type == TYPE_KING && (dst - src).norm2() > 2) {
+		a.type = CASTLING;
+	} else if (board[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
+		a.type = EN_PASSANT;
+	} else if (board[src].type == TYPE_PAWN) {
+		if (dst[1] == board.height() - 1 || dst[1] == 0) {
+			a.type = PROMOTION;
+		}
+	} else {
+		a.type = MOVE_PIECE;
+	}
+	
+	a.promotion = TYPE_NONE;
+
+    return a;
 }
 
-bool Rules::isMoveLegal(const GameModel &model, Move move) {
-	Player player = move.player;
-	
+bool Rules::isActionLegal(const GameModel &model, Action a) {
 	const Board &board = model.getBoard();
-    Piece piece = board.getPiece(move.src);
+	
+	// catch any out of bound indices
+	if (!board.isInBound(a.src) || !board.isInBound(a.dst))
+		return false;
 	
     // is it this players turn?
     switch (model.getGameState()) {
     case STATE_WHITE_TURN:
-        if (move.player != PLAYER_WHITE)
+        if (a.player != PLAYER_WHITE)
             return false;
         break;
     case STATE_BLACK_TURN:
-        if (move.player != PLAYER_BLACK)
+        if (a.player != PLAYER_BLACK)
             return false;
         break;
     default:
@@ -69,213 +62,198 @@ bool Rules::isMoveLegal(const GameModel &model, Move move) {
     }
 
     // is there a piece on src?
-    if (piece.getType() == TYPE_NONE)
+    if (board[a.src].type == TYPE_NONE)
         return false; // player wants to move an empty piece
 
     // is the piece owned by the player making the move?
-    if (piece.getPlayer() != player)
+    if (board[a.src].player != a.player)
         return false; // player wants to move his opponent's pieces
 
     // has the piece actually moved?
-    if (move.src == move.dest)
+    if (a.src == a.dst)
         return false; // the piece must not stay on its square
 	
 	// special cases
-    if (move.castling_flag) {
-		if (move.capture_flag || move.en_passant_flag)
+    if (a.type == CASTLING) {
+		if (!isCastlingLegal(model, a))
 			return false;
-		if (!isCastlingLegal(model, move.src, move.dest))
-			return false;
-    } else if (move.en_passant_flag) {
-		if (!move.capture_flag)
-			return false;
-		if (!isEnPassantLegal(model, move.src, move.dest))
+    } else if (a.type == EN_PASSANT) {
+		if (!isEnPassantLegal(model, a))
 			return false;
 	} else {
-		if (!isRegularMoveLegal(model, move.src, move.dest, move.capture_flag))
+		if (!isRegularMoveLegal(model, a))
 			return false;
 	}
 
 	// do we end our turn in check?
     GameModel result = model; // explicitly copy the current position
-	result.move(move); // apply the move (should otherwise be legal by now)
-	if (isPlayerInCheck(result.getBoard(), player))
+	result.action(a); // apply the move (should otherwise be legal by now)
+	if (isPlayerInCheck(result.getBoard(), a.player))
 		return false;
 	
 	// passed all tests
 	return true;
 }
 
-bool Rules::isCastlingLegal(const GameModel &model, Square src, Square dest) {
+bool Rules::isCastlingLegal(const GameModel &model, Action a) {
 	const Board &board = model.getBoard();
-	Piece piece = board.getPiece(src);
-	Player player = piece.getPlayer();
 	
 	// only allow castling for kings in the starting position
-	if (getKingStartingSquare(board, player) != src)
+	if (getKingStartingSquare(board, a.player) != a.src)
 		return false;
-	if (piece.getType() != TYPE_KING)
+	if (board[a.src].type != TYPE_KING)
 		return false;
 
 	// which of the two castlings is being performed?
-	Coord file_d = dest.getFile() - src.getFile();
+	Tile d = a.dst - a.src;
 	CastlingType castling_type;
-	if (file_d == +2)
+	if (d[0] == +2 && d[1] == 0)
 		castling_type = KINGSIDE;
-	else if (file_d == -2)
+	else if (d[0] == -2 && d[1] == 0)
 		castling_type = QUEENSIDE;
 	else
 		return false;
 	
 	// is there a rook where it needs to be?
-	Square rook_square = getRookStartingSquare(board, player, castling_type);
-	if (board.getPiece(rook_square).getType() != TYPE_ROOK)
+	Tile rook = getRookStartingSquare(board, a.player, castling_type);
+	if (board[rook].type != TYPE_ROOK)
 		return false;
 	
 	// was the king or the rook previously moved?
-	if (!model.canCastle(castling_type, player))
+	if (!model.canCastle(castling_type, a.player))
 		return false;
 	
 	// is there any piece between the king and the rook?
-	if (!isPathFree(board, src, rook_square))
+	if (!isPathFree(board, a.src, rook))
 		return false;
 	
 	// is the player performing the castling currently in check?
-	Player opponent = player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
-	if (doesPlayerAttackSquare(board, src, opponent))
+	Player opponent = a.player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
+	if (doesPlayerAttackSquare(board, a.src, opponent))
 		return false;
 	
 	// is the square the king passes over currently attacked?
-	Coord file_step = castling_type == KINGSIDE ? +1 : -1;
-	Coord file_passing_by = src.getFile() + file_step;
-	Square square_passing_by = Square(src.getRank(), file_passing_by);
-	if (doesPlayerAttackSquare(board, square_passing_by, opponent))
+	Tile step = Tile((int8)(castling_type == KINGSIDE ? +1 : -1), (int8)0);
+	Tile passing_by = a.src + step;
+	if (doesPlayerAttackSquare(board, passing_by, opponent))
 		return false;
 	
 	return true;
 }
 
-bool Rules::isEnPassantLegal(const GameModel &model, Square src, Square dest) {
+bool Rules::isEnPassantLegal(const GameModel &model, Action a) {
 	return false;
 }
 
-bool Rules::isRegularMoveLegal(const GameModel &model, Square src, Square dest, bool capture_flag) {
-	
+bool Rules::isRegularMoveLegal(const GameModel &model, Action a) {
 	const Board &board = model.getBoard();
-	Piece src_piece = board.getPiece(src);
-	Piece dest_piece = board.getPiece(dest);
 	
 	// can the piece actually move there (ignoring other pieces on the board)?
-	if (!isSquareInRange(board, src, dest, capture_flag))
+	if (!isSquareInRange(board, a.src, a.dst, a.type == CAPTURE_PIECE))
 		return false;
 	
 	// capturing moves
-	if (capture_flag) {
-		if (dest_piece.getType() == TYPE_NONE)
+	if (a.type == CAPTURE_PIECE) {
+		// can't capture empty tiles
+		if (board[a.dst].type == TYPE_NONE)
 			return false;
-		if (src_piece.getPlayer() == dest_piece.getPlayer())
+		// can't capture your own pieces
+		if (board[a.dst].player == a.player)
 			return false;
 	} else {
 		// target square must be empty for non-capture moves
-		if (dest_piece.getType() != TYPE_NONE)
+		if (board[a.dst].type != TYPE_NONE)
 			return false;
 	}
 	
 	// check whether the path between src and dest is actually free
-	if (src_piece.getType() != TYPE_KNIGHT)
-		if (!isPathFree(board, src, dest))
+	if (board[a.src].type != TYPE_KNIGHT)
+		if (!isPathFree(board, a.src, a.dst))
 			return false;
 	
 	return true;
 }
 
-Square Rules::getKingStartingSquare(const Board &board, Player player) {
+Tile Rules::getKingStartingSquare(const Board &board, Player player) {
 	if (player == PLAYER_WHITE)
-		return Square(0, 4);
+		return Tile((int8)4, (int8)0);
 	else if (player == PLAYER_BLACK)
-		return Square(board.getHeight() - 1, 4);
+		return Tile((int8)4, (int8)(board.height() - 1));
 	else
-		return Square::INVALID;
+		return Board::INVALID_TILE;
 }
 
-Square Rules::getRookStartingSquare(const Board &board, Player player, CastlingType type) {
-	Coord rank, file;
+Tile Rules::getRookStartingSquare(const Board &board, Player player, CastlingType type) {
+	int8 x, y;
 	if (player == PLAYER_WHITE)
-		rank = 0;
+		y = 0;
 	else if (player == PLAYER_BLACK)
-		rank = board.getHeight() - 1;
+		y = board.height() - 1;
 	else
-		return Square::INVALID;
+		return Board::INVALID_TILE;
 	if (type == KINGSIDE)
-		file = board.getWidth() - 1;
+		x = board.width() - 1;
 	else if (type == QUEENSIDE)
-		file = 0;
+		x = 0;
 	else
-		return Square::INVALID;
-	return Square(rank, file);
+		return Board::INVALID_TILE;
+	return Tile(x, y);
 }
 
 bool Rules::isPlayerInCheck(const Board &board, Player player) {
 	// find players king
-	Square king = Square::INVALID;
-	for (Coord rank = 0; rank < board.getHeight(); ++rank)
-	for (Coord file = 0; file < board.getWidth(); ++file) {
-		Square square = Square(rank, file);
-		Piece piece = board.getPiece(square);
-		if (piece.getType() == TYPE_KING && piece.getPlayer() == player) {
-			king = square;
-			goto BREAK_FROM_NESTED_LOOP;
+	Tile king = Board::INVALID_TILE;
+	for (int8 y = 0; y < board.height(); ++y)
+		for (int8 x = 0; x < board.width(); ++x) {
+			Tile tile = Tile(x, y);
+			if (board[tile].type == TYPE_KING && board[tile].player == player) {
+				king = tile;
+				goto BREAK_FROM_NESTED_LOOP;
+			}
 		}
-	}
 	BREAK_FROM_NESTED_LOOP:;
 	
 	Player opponent = player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
 	return doesPlayerAttackSquare(board, king, opponent);
 }
 
-bool Rules::doesPlayerAttackSquare(const Board &board, Square square, Player player) {
+bool Rules::doesPlayerAttackSquare(const Board &board, Tile tile, Player p) {
 	// en passant capture is completely ignored for this function.
-	static const Coord rank_steps[] = {-1, -1, -1,  0,  0, +1, +1, +1};
-	static const Coord file_steps[] = {-1,  0, +1, -1, +1, -1,  0, +1};
+	static const int8 sx[] = {-1, -1, -1,  0,  0, +1, +1, +1};
+	static const int8 sy[] = {-1,  0, +1, -1, +1, -1,  0, +1};
 	
 	// for all eight directions
 	for (int i = 0; i < 8; ++i) {
 		// walk in that direction...
-		Coord rank = square.getRank() + rank_steps[i];
-		Coord file = square.getFile() + file_steps[i];
+		Tile s = Tile(sx[i], sy[i]);
+		Tile iter = tile + s;
 		// ...until we hit the edge of the board...
-		while (board.isInBound(rank, file)) {
-			Square dest = Square(rank, file);
-			Piece piece = board.getPiece(dest);
+		while (board.isInBound(iter)) {
 			// ...or we find a piece in our way.
-			if (piece.getType() != TYPE_NONE) {
-				bool is_opponent = piece.getPlayer() == player;
-				bool can_reach_me = isSquareInRange(board, dest, square, true);
+			if (board[iter].type != TYPE_NONE) {
+				bool is_opponent = board[iter].player == p;
+				bool can_reach_me = isSquareInRange(board, iter, tile, true);
 				if (is_opponent && can_reach_me) {
 					return true;
 				} else {
 					goto NEXT_DIRECTION;
 				}
 			}
-			rank += rank_steps[i];
-			file += file_steps[i];
+			iter += s;
 		}
 		NEXT_DIRECTION:;
 	} // for each of the eight direction
 	
 	// check for knights
-	static const Coord rank_knight_steps[] = {-1, -1, +1, +1, -2, -2, +2, +2};
-	static const Coord file_knight_steps[] = {-2, +2, -2, +2, -1, +1, -1, +1};
+	static const int8 sx_knight[] = {-1, -1, +1, +1, -2, -2, +2, +2};
+	static const int8 sy_knight[] = {-2, +2, -2, +2, -1, +1, -1, +1};
 	for (int i = 0; i < 8; ++i) {
-		Coord rank = square.getRank() + rank_knight_steps[i];
-		Coord file = square.getFile() + file_knight_steps[i];
-		Square dest = Square(rank, file);
-		if (!board.isInBound(dest))
+		Tile knight = Tile(sx_knight[i], sy_knight[i]);
+		if (!board.isInBound(knight))
 			continue;
-		Piece piece = board.getPiece(dest);
-		if (piece.getType() != TYPE_NONE) {
-			bool is_opponent = piece.getPlayer() == player;
-			bool can_reach_me = isSquareInRange(board, dest, square, true);
+		if (board[knight].type != TYPE_NONE) {
+			bool is_opponent = board[knight].player == p;
+			bool can_reach_me = isSquareInRange(board, knight, tile, true);
 			if (is_opponent && can_reach_me) {
 				return true;
 			}
@@ -286,54 +264,44 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Square square, Player pla
 	return false;
 }
 
-bool Rules::isPathFree(const Board &board, Square src, Square dest) {
-	if (!board.isInBound(src) || !board.isInBound(dest))
+bool Rules::isPathFree(const Board &board, Tile src, Tile dst) {
+	if (!board.isInBound(src) || !board.isInBound(dst))
 		return false;
-	if (board.getPiece(src).getType() == TYPE_KNIGHT)
+	// knights can go anywhere, no matter if pieces are in the way
+	if (board[src].type == TYPE_KNIGHT)
 		return true;
-	Coord rank_d = dest.getRank() - src.getRank();
-	Coord file_d = dest.getFile() - src.getFile();
-	Coord rank_step, file_step;
-	if (rank_d > 0)
-		rank_step = +1;
-	else if (rank_d < 0)
-		rank_step = -1;
-	else
-		rank_step = 0;
-	if (file_d > 0)
-		file_step = +1;
-	else if (file_d < 0)
-		file_step = -1;
-	else
-		file_step = 0;
-	if (rank_d != 0 && file_d != 0 && rank_d * rank_d != file_d * file_d) {
-		// Input is no straight or diagonal line
+	Tile d = dst - src;
+	
+	// check for non-straight or -diagonal lines
+	if (d[0] != 0 && d[1] != 0 && d[0] * d[0] != d[1] * d[1])
 		return false;
-	}
+	Tile step;
+	for (int i = 0; i < 2; ++i)
+		if (d[i] > 0)
+			step[i] = +1;
+		else if (d[i] < 0)
+			step[i] = -1;
+		else
+			step[i] = 0;
 	
-	Coord rank = src.getRank() + rank_step;
-	Coord file = src.getFile() + file_step;
-	
-	while (rank != dest.getRank() || file != dest.getFile()) {
-		Piece piece = board.getPiece(rank, file);
-		if (piece.getType() != TYPE_NONE)
+	// look for pieces on the path
+	Tile iter = src + step;
+	while (iter != dst) {
+		if (board[iter].type != TYPE_NONE)
 			return false;
-		rank += rank_step;
-		file += file_step;
+		iter += step;
 	}
 	
 	return true;
 }
 
-bool Rules::isSquareInRange(const Board &board, Square src, Square dest, bool capture_flag) {
-	Piece piece = board.getPiece(src);
-    Coord d_rank = dest.getRank() - src.getRank();
-    Coord d_file = dest.getFile() - src.getFile();
+bool Rules::isSquareInRange(const Board &board, Tile src, Tile dst, bool capture) {
+	Tile d = dst - src;
 
     // sort out moves, which end on the src square or outside the board
-    if (d_rank == 0 && d_file == 0)
+    if (!board.isInBound(src) || !board.isInBound(dst))
         return false;
-    if (!board.isInBound(src) || !board.isInBound(dest))
+    if (d.norm2() == 0)
         return false;
 
 	/* Pawns are the only pieces with non trivial moving patterns.  They
@@ -341,69 +309,65 @@ bool Rules::isSquareInRange(const Board &board, Square src, Square dest, bool ca
 	 * also capture moves differ from non-capture ones.  This is why they get
 	 * a special treatment here.
 	 */
-    switch (piece.getType())
+    switch (board[src].type)
     {
     case TYPE_PAWN: {
 		// generalize this section for both players
-		Coord direction;
-		Coord start_rank;
-		switch (piece.getPlayer()) {
+		int8 direction;
+		int8 start_row;
+		switch (board[src].player) {
 			case PLAYER_WHITE:
 				direction = +1;
-				start_rank = 1;
+				start_row = 1;
 				break;
 			case PLAYER_BLACK:
 				direction = -1;
-				start_rank = board.getHeight() - 2;
+				start_row = board.height() - 2;
 				break;
 			default: return false;
 		}
-		if (capture_flag) {
+		if (capture) {
 			// all capture moves must be one tile forward...
-			if (d_rank != 1 * direction)
+			if (d[1] != 1 * direction)
 				return false;
 			// ...and exactly one tile sideway either way.
-			if (d_file != 1 && d_file != -1)
+			if (d[0] != 1 && d[0] != -1)
 				return false;
 			return true;
 		} else {
 			// all non-capture pawn moves must be straight forward
-			if (d_file != 0)
+			if (d[0] != 0)
 				return false;
 			// going forward two tiles is only possible from starting position
-			if (d_rank == 2 * direction)
-				return src.getRank() == start_rank;
+			if (d[1] == 2 * direction)
+				return src[1] == start_row;
 			// other than that, pawns can only move forward single tiles
-			if (d_rank == 1 * direction)
+			if (d[1] == 1 * direction)
 				return true;
 			return false;
 		}
 	} // case TYPE_PAWN
-	/*case TYPE_KING:
-		if (castling_flag)
-			return d_rank == 0 && d_file * d_file == 4;
-		// intentional falltrough*/
     default:
-        return isSquareInRange(piece.getType(), d_rank, d_file);
+        return isSquareInRange(board[src].type, d);
 	} // switch (piece.getType())
 }
 
-bool Rules::isSquareInRange(Type type, Coord d_rank, Coord d_file) {
+bool Rules::isSquareInRange(Type type, Tile d) {
     // sort out moves, which end on the src square
-    if (d_rank == 0 && d_file == 0)
+    if (d.norm2() == 0)
         return false;
 
     switch (type) {
     case TYPE_KING:
-		return d_rank * d_rank + d_file * d_file <= 2;
+		return d.norm2() <= 2;
     case TYPE_QUEEN:
-		return d_rank == 0 || d_file == 0 || d_rank * d_rank == d_file * d_file;
+		return d[0] == 0 || d[1] == 0 || d[0] * d[0] == d[1] * d[1];
     case TYPE_ROOK:
-        return d_rank == 0 || d_file == 0;
+        return d[0] == 0 || d[1] == 0;
     case TYPE_BISHOP:
-        return d_rank * d_rank == d_file * d_file;
+        return d[0] * d[0] == d[1] * d[1];
     case TYPE_KNIGHT:
-        return d_rank * d_rank + d_file * d_file == 5;
+        return d.norm2() == 5;
     case TYPE_PAWN:
         return false; // pawns can't be checked this way
     default:
