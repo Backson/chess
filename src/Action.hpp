@@ -20,7 +20,7 @@ enum ActionType : int8 {
 	CAPTURE_PIECE,
 	CASTLING,
 	EN_PASSANT,
-	PROMOTION,
+	//PROMOTION, // deprecated, set action.promotion to not TYPE_NONE instead
 	
 	RESIGN,
 	OFFER_REMIS,

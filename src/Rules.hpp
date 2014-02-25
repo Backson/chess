@@ -30,6 +30,10 @@ public:
 	/*
 	 */
 	bool isEnPassantLegal(const GameModel &, Action a);
+	 
+	/*
+	 */
+	bool isPromotionLegal(const GameModel &, Action a);
 	
 	/* checks whether a move is legal that is not a castling or en passant.
 	 */
@@ -66,13 +70,13 @@ public:
 	 */
     bool isSquareInRange(Type type, Tile d);
 	
-	/**
+	/** Checks whether a piece on a specific tile has any legal moves to make
 	 */
-	bool hasLegalMove(const GameModel &, Tile);
+	bool hasLegalMove(const GameModel &, Tile src);
 	
-	/**
+	/** Checks whether a legal move from src to dst exists
 	 */
-	bool hasLegalMove(const GameModel &, Tile, Tile);
+	bool hasLegalMove(const GameModel &, Tile src, Tile dst);
 };
 
 #endif // RULES_HPP

@@ -27,8 +27,8 @@ public:
 	Piece piece(Tile tile) const;
 	Piece &piece(Tile tile);
 	
-	Piece &operator[](Tile tile) const;
-	Piece operator[](Tile tile);
+	Piece operator[](Tile tile) const;
+	Piece &operator[](Tile tile);
 
     bool operator==(const Board &other) const;
     bool operator!=(const Board &other) const;

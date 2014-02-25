@@ -151,5 +151,9 @@ void GameModel::action(const Action& a) {
 		_board.movePiece(a.src, a.dst);
 	}
 	
+	if (a.promotion != TYPE_NONE) {
+		_board[a.dst] = Piece{_board[a.dst].player, a.promotion};
+	}
+	
     _game_state = _game_state == STATE_WHITE_TURN ? STATE_BLACK_TURN : STATE_WHITE_TURN;
 }

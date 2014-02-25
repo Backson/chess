@@ -6,10 +6,6 @@ bool operator==(const Action &lhs, const Action &rhs) {
 	if (lhs.type != rhs.type)
 		return false;
 	switch (lhs.type) {
-		case PROMOTION:
-			if (lhs.promotion != rhs.promotion)
-				return false;
-			// fallthrough
 		case CAPTURE_PIECE:
 		case MOVE_PIECE:
 		case CASTLING:

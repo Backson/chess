@@ -27,15 +27,17 @@ Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
 		a.type = CASTLING;
 	} else if (board[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
 		a.type = EN_PASSANT;
-	} else if (board[src].type == TYPE_PAWN) {
-		if (dst[1] == board.height() - 1 || dst[1] == 0) {
-			a.type = PROMOTION;
-		}
 	} else {
 		a.type = MOVE_PIECE;
 	}
 	
 	a.promotion = TYPE_NONE;
+	if (board[src].type == TYPE_PAWN) {
+		if (dst[1] == board.height() - 1 || dst[1] == 0) {
+			// TODO let the player choose promotion type himself
+			a.promotion = TYPE_QUEEN;
+		}
+	}
 
     return a;
 }
@@ -164,6 +166,22 @@ bool Rules::isRegularMoveLegal(const GameModel &model, Action a) {
 		// target square must be empty for non-capture moves
 		if (board[a.dst].type != TYPE_NONE)
 			return false;
+	}
+	
+	// check for promotions
+	int8 end_row = a.player == PLAYER_WHITE ? board.width() - 1 : 0;
+	if (board[a.src].type == TYPE_PAWN && a.dst[1] == end_row) {
+		switch (a.promotion) {
+			case TYPE_NONE:
+			case TYPE_PAWN:
+			case TYPE_KING:
+				return false;
+			case TYPE_QUEEN:
+			case TYPE_ROOK:
+			case TYPE_BISHOP:
+			case TYPE_KNIGHT:
+				break;
+		}
 	}
 	
 	// check whether the path between src and dest is actually free

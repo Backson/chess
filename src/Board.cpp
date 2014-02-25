@@ -132,11 +132,11 @@ Piece &Board::piece(Tile tile) {
 	return _pieces[tile[1]][tile[0]];
 }
 
-Piece &Board::operator[](Tile tile) const {
+Piece Board::operator[](Tile tile) const {
 	return _pieces[tile[1]][tile[0]];
 }
 
-Piece Board::operator[](Tile tile) {
+Piece &Board::operator[](Tile tile) {
 	return _pieces[tile[1]][tile[0]];
 }
 

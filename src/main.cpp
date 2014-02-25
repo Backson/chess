@@ -179,6 +179,11 @@ int main(int argc, char** argv)
 						bool is_legal = rules.isActionLegal(*pc.model, action);
 						if (is_legal) {
 							pc.model->action(action);
+							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
+							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
+							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
+							printf(" id:%d", action.type);
+							printf(" (promote to %d)\n", action.promotion);
 							selection = board.INVALID_TILE;
 							goto NEXT_EVENT;
 						}
