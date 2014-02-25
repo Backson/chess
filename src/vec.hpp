@@ -58,7 +58,7 @@ private:
 template <typename T, size_t N>
 template <typename... Args>
 vec<T, N>::vec(Args... args)
-		: _t({args...})
+		: _t{args...}
 {
 	static_assert(sizeof...(Args) == N,
 			"Incorrect number of arguments passed to vec constructor");
