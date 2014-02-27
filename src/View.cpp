@@ -102,11 +102,13 @@ void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
 				drawSelection(piece_x, piece_y);
 			}
 			if (algebraic == cursor) {
-				Rules rules;
+				//Rules rules;
 				bool has_sel = board.isInBound(selection);
-				if (has_sel && rules.hasLegalMove(model, selection, cursor))
-					drawCursor(piece_x, piece_y);
-				if (rules.hasLegalMove(model, cursor))
+				//if (has_sel && rules.hasLegalMove(model, selection, cursor))
+				//	drawCursor(piece_x, piece_y);
+				//if (rules.hasLegalMove(model, cursor))
+				//	drawCursor(piece_x, piece_y);
+				if(has_sel || board.piece(cursor).player ==  model.getActivePlayer())
 					drawCursor(piece_x, piece_y);
 			}
 		}

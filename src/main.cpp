@@ -188,7 +188,9 @@ int main(int argc, char** argv)
 							goto NEXT_EVENT;
 						}
 					}
-					if (rules.hasLegalMove(*pc.model, tile))
+					//if (rules.hasLegalMove(*pc.model, tile))
+					else if(board.isInBound(selection)
+						|| board.piece(tile).player ==  pc.model->getActivePlayer())
 						selection = tile;
 					else
 						selection = board.INVALID_TILE;
