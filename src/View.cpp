@@ -102,13 +102,9 @@ void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
 				drawSelection(piece_x, piece_y);
 			}
 			if (algebraic == cursor) {
-				//Rules rules;
 				bool has_sel = board.isInBound(selection);
-				//if (has_sel && rules.hasLegalMove(model, selection, cursor))
-				//	drawCursor(piece_x, piece_y);
-				//if (rules.hasLegalMove(model, cursor))
-				//	drawCursor(piece_x, piece_y);
-				if(has_sel || board.piece(cursor).player ==  model.getActivePlayer())
+				bool owns_piece = board[cursor].player ==  model.getActivePlayer();
+				if(has_sel || owns_piece)
 					drawCursor(piece_x, piece_y);
 			}
 		}
@@ -164,6 +160,12 @@ float View::getBoardWidthPixels() const {
 	return width * getTileSizePixels();
 }
 
+float View::getBoardHeightPixels() const {
+	bool sideway = isSideway(_orientation);
+	auto height = sideway ? getBoardWidth() : getBoardHeight();
+	return height * getTileSizePixels();
+}
+
 int View::getBoardWidth() const {
 	return _board_width;
 }
@@ -172,10 +174,8 @@ int View::getBoardHeight() const {
 	return _board_height;
 }
 
-float View::getBoardHeightPixels() const {
-	bool sideway = isSideway(_orientation);
-	auto height = sideway ? getBoardWidth() : getBoardHeight();
-	return height * getTileSizePixels();
+Orientation View::getOrientation() const {
+	return _orientation;
 }
 
 Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {

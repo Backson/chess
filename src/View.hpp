@@ -13,10 +13,10 @@ enum TileColor {
 };
 
 enum Orientation {
-    WHITE_ON_TOP,
-    WHITE_ON_THE_LEFT,
-    WHITE_ON_THE_RIGHT,
     WHITE_AT_THE_BOTTOM,
+    WHITE_ON_THE_LEFT,
+    WHITE_ON_TOP,
+    WHITE_ON_THE_RIGHT,
 };
 
 bool isSideway(Orientation);
@@ -51,6 +51,8 @@ public:
 	
 	int getBoardWidth() const;
 	int getBoardHeight() const;
+	
+	Orientation getOrientation() const;
 
 	Tile convertAlgebraicToDisplayed(Tile) const;
 	Tile convertDisplayedToAlgebraic(Tile) const;
