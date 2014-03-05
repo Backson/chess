@@ -5,18 +5,18 @@
 
 enum Player : int8 {
 	PLAYER_NONE = -1,
-    PLAYER_WHITE,
-    PLAYER_BLACK,
+	PLAYER_WHITE,
+	PLAYER_BLACK,
 };
 
 enum Type : int8 {
-    TYPE_NONE = -1,
-    TYPE_KING,
-    TYPE_QUEEN,
-    TYPE_ROOK,
-    TYPE_BISHOP,
-    TYPE_KNIGHT,
-    TYPE_PAWN,
+	TYPE_NONE = -1,
+	TYPE_KING,
+	TYPE_QUEEN,
+	TYPE_ROOK,
+	TYPE_BISHOP,
+	TYPE_KNIGHT,
+	TYPE_PAWN,
 };
 
 struct Piece {

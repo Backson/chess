@@ -13,10 +13,10 @@ enum TileColor {
 };
 
 enum Orientation {
-    WHITE_AT_THE_BOTTOM,
-    WHITE_ON_THE_LEFT,
-    WHITE_ON_TOP,
-    WHITE_ON_THE_RIGHT,
+	WHITE_AT_THE_BOTTOM,
+	WHITE_ON_THE_LEFT,
+	WHITE_ON_TOP,
+	WHITE_ON_THE_RIGHT,
 };
 
 bool isSideway(Orientation);
@@ -28,26 +28,26 @@ public:
 	View(const View &) = delete;
 	View(int board_width, int board_height,
 		Orientation orientation, float border_size);
-    ~View();
+	~View();
 
-    void draw(float x, float y, const GameModel &model, Tile selection);
+	void draw(float x, float y, const GameModel &model, Tile selection);
 
 private:
-    void drawPanel(float x, float y, const GameModel &model, Tile selection);
-    void drawBorder(float x, float y);
-    void drawBorderDecoration(float x, float y);
-    void drawBoard(float x, float y, const GameModel &model, Tile selection);
-    void drawPiece(float x, float y, const Piece &piece, int whichTile);
-    void drawSelection(float x, float y);
+	void drawPanel(float x, float y, const GameModel &model, Tile selection);
+	void drawBorder(float x, float y);
+	void drawBorderDecoration(float x, float y);
+	void drawBoard(float x, float y, const GameModel &model, Tile selection);
+	void drawPiece(float x, float y, const Piece &piece, int whichTile);
+	void drawSelection(float x, float y);
 	void drawCursor(float x, float y);
 	
 public:
 	float getBorderSizePixels() const;
 	float getTileSizePixels() const;
-    float getPanelWidthPixels() const;
-    float getPanelHeightPixels() const;
-    float getBoardWidthPixels() const;
-    float getBoardHeightPixels() const;
+	float getPanelWidthPixels() const;
+	float getPanelHeightPixels() const;
+	float getBoardWidthPixels() const;
+	float getBoardHeightPixels() const;
 	
 	int getBoardWidth() const;
 	int getBoardHeight() const;
@@ -57,16 +57,16 @@ public:
 	Tile convertAlgebraicToDisplayed(Tile) const;
 	Tile convertDisplayedToAlgebraic(Tile) const;
 
-    Tile getTileAt(float x, float y);
+	Tile getTileAt(float x, float y);
 
-    static int initialize();
-    static void deinitialize();
+	static int initialize();
+	static void deinitialize();
 	
 private:
 	/// size of the board in tiles
 	const int _board_width, _board_height;
 	/// in which orientation to draw
-    const Orientation _orientation;
+	const Orientation _orientation;
 	/// size of the border in pixels
 	const float _border_size;
 	
@@ -76,11 +76,11 @@ private:
 	/// where was the board las drawn? (top left corner, border inclusive)
 	int _x, _y;
 	/// The board that was last drawn
-    Board _board;
+	Board _board;
 	/// which selection was drawn last frame (invalid if none was drawn)
-    Tile _selection;
+	Tile _selection;
 	/// where the cursor was drawn last frame (invalid if none was drawn)
-    Tile _cursor;
+	Tile _cursor;
 	/// draw all the frames here (dirty rect) and blit this to target
 	ALLEGRO_BITMAP* _buffer;
 
@@ -89,7 +89,7 @@ private:
 	/// was initialized() called?
 	static bool _is_initialized;
 	/// the sprites used to draw the board
-    static ALLEGRO_BITMAP* _image_tile[7][2][2]; // type, player, tile
+	static ALLEGRO_BITMAP* _image_tile[7][2][2]; // type, player, tile
 };
 
 #endif // VIEW_HPP

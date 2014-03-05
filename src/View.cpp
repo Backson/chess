@@ -34,7 +34,7 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 }
 
 View::~View() {
-    al_destroy_bitmap(_buffer);
+	al_destroy_bitmap(_buffer);
 }
 
 void View::draw(float x, float y, const GameModel &model, Tile selection) {
@@ -64,16 +64,16 @@ void View::drawBorder(float x, float y) {
 	float height = getPanelHeightPixels();
 	
 	// top
-    al_draw_filled_rectangle(
+	al_draw_filled_rectangle(
 		x, y, x + width, y + border, color);
 	// bottom
-    al_draw_filled_rectangle(
+	al_draw_filled_rectangle(
 		x, y + height - border, x + width, y + height, color);
 	// left
-    al_draw_filled_rectangle(
+	al_draw_filled_rectangle(
 		x, y + border, x + border, y + border + height, color);
 	// right
-    al_draw_filled_rectangle(
+	al_draw_filled_rectangle(
 		x + width - border, y + border, x + width, y + border + height, color);
 }
 
@@ -87,7 +87,7 @@ void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
 	al_get_mouse_state(&mouse);
 	Tile cursor = getTileAt(mouse.x, mouse.y);
 	
-    for (int8 yy = 0; yy < board.height(); ++yy)
+	for (int8 yy = 0; yy < board.height(); ++yy)
 		for (int8 xx = 0; xx < board.width(); ++xx)
 		{
 			Tile algebraic = Tile(xx, yy);
@@ -112,8 +112,8 @@ void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
 
 void View::drawPiece(float x, float y, const Piece& piece, int tile_color) {
 	Player player = piece.type == TYPE_NONE ? PLAYER_WHITE : piece.player;
-    ALLEGRO_BITMAP* image = _image_tile[piece.type + 1][player][tile_color];
-    al_draw_bitmap(image, x, y, 0);
+	ALLEGRO_BITMAP* image = _image_tile[piece.type + 1][player][tile_color];
+	al_draw_bitmap(image, x, y, 0);
 }
 
 void View::drawSelection(float x, float y) {
@@ -179,8 +179,8 @@ Orientation View::getOrientation() const {
 }
 
 Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {
-    switch (_orientation)
-    {
+	switch (_orientation)
+	{
 		case WHITE_AT_THE_BOTTOM: {
 			int8 y = _board_height - algebraic[1] - 1;
 			int8 x = algebraic[0];
@@ -203,12 +203,12 @@ Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {
 		}
 		default:
 			assert (false);
-    } // switch (rotation)
+	} // switch (rotation)
 }
 
 Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
-    switch (_orientation)
-    {
+	switch (_orientation)
+	{
 		case WHITE_AT_THE_BOTTOM: {
 			int8 y = _board_height - displayed[1] - 1;
 			int8 x = displayed[0];
@@ -236,18 +236,18 @@ Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
 		}
 		default:
 			assert (false);
-    } // switch (rotation)
+	} // switch (rotation)
 }
 
 Tile View::getTileAt(float x, float y) {
-    float dx = x - getBorderSizePixels() - _x;
-    float dy = y - getBorderSizePixels() - _y;
+	float dx = x - getBorderSizePixels() - _x;
+	float dy = y - getBorderSizePixels() - _y;
 	
-    if (dx >= getBoardWidthPixels() || dx < 0
+	if (dx >= getBoardWidthPixels() || dx < 0
 		|| dy >= getBoardHeightPixels() || dy < 0)
-    {
-        return Tile((int8)-1, (int8)-1);
-    }
+	{
+		return Tile((int8)-1, (int8)-1);
+	}
 	
 	auto tile_size = getTileSizePixels();
 	Tile displayed = Tile((int8)(dx / tile_size), (int8)(dy / tile_size));
@@ -256,7 +256,7 @@ Tile View::getTileAt(float x, float y) {
 }
 
 int View::initialize() {
-    ALLEGRO_BITMAP* tile_map = al_load_bitmap("tiles_std.tga");
+	ALLEGRO_BITMAP* tile_map = al_load_bitmap("tiles_std.tga");
 	
 	if (!tile_map) {
 		return -1;
@@ -267,7 +267,7 @@ int View::initialize() {
 	// activate alpha blending
 	al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
 
-    for (int type = -1; type < 6; ++type)
+	for (int type = -1; type < 6; ++type)
 	for (int player = 0; player < 2; ++player)
 	for (int tile = 0; tile < 2; ++tile)
 	{
@@ -292,18 +292,18 @@ int View::initialize() {
 					0.0, 0.0, /* destination image coord */
 					0 /* flags */
 			);
-    }
+	}
 
-    al_destroy_bitmap(tile_map);
+	al_destroy_bitmap(tile_map);
 	_is_initialized = true;
-    return 0;
+	return 0;
 }
 
 void View::deinitialize() {
 	if (_is_initialized == false)
 		return;
 	
-    for (int type = 0; type < 7; ++type)
+	for (int type = 0; type < 7; ++type)
 	for (int player = 0; player < 2; ++player)
 	for (int tile = 0; tile < 2; ++tile)
 	{

@@ -3,90 +3,90 @@
 Board::Board() :
 	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y) {
-    	this->_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y) {
+		this->_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x) {
-            this->_pieces[y][x] = Piece::NONE;
-        }
-    }
+		for (int x = 0; x < _width; ++x) {
+			this->_pieces[y][x] = Piece::NONE;
+		}
+	}
 }
 
 Board::Board(int width, int height) :
 	_width(width), _height(height)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y) {
-    	this->_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y) {
+		this->_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x) {
-            this->_pieces[y][x] = Piece::NONE;
-        }
-    }
+		for (int x = 0; x < _width; ++x) {
+			this->_pieces[y][x] = Piece::NONE;
+		}
+	}
 }
 
 Board::Board(const Board& other) :
 	_width(other._width), _height(other._height)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y) {
-    	this->_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y) {
+		this->_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x) {
-            this->_pieces[y][x] = other._pieces[y][x];
-        }
-    }
+		for (int x = 0; x < _width; ++x) {
+			this->_pieces[y][x] = other._pieces[y][x];
+		}
+	}
 }
 
 Board::Board(const Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT]) :
 	_width(BOARD_HEIGHT_DEFAULT), _height(BOARD_WIDTH_DEFAULT)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y) {
-    	_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y) {
+		_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x) {
-            _pieces[y][x] = pieces[y][x];
-        }
-    }
+		for (int x = 0; x < _width; ++x) {
+			_pieces[y][x] = pieces[y][x];
+		}
+	}
 }
 
 Board::Board(const Piece **pieces) :
 	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y) {
-    	this->_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y) {
+		this->_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x)
-        {
-            this->_pieces[y][x] = pieces[y][x];
-        }
-    }
+		for (int x = 0; x < _width; ++x)
+		{
+			this->_pieces[y][x] = pieces[y][x];
+		}
+	}
 }
 
 Board::Board(const Piece **pieces, int width, int height) :
 	_width(width), _height(height)
 {
-    this->_pieces = new Piece*[_height];
-    for (int y = 0; y < _height; ++y)
-    {
-    	this->_pieces[y] = new Piece[_width];
+	this->_pieces = new Piece*[_height];
+	for (int y = 0; y < _height; ++y)
+	{
+		this->_pieces[y] = new Piece[_width];
 
-        for (int x = 0; x < _width; ++x)
-        {
-            this->_pieces[y][x] = pieces[y][x];
-        }
-    }
+		for (int x = 0; x < _width; ++x)
+		{
+			this->_pieces[y][x] = pieces[y][x];
+		}
+	}
 }
 
 Board::~Board()
 {
-    for (int y = 0; y < _height; ++y) {
-    	delete[] _pieces[y];
-    }
-    delete[] _pieces;
+	for (int y = 0; y < _height; ++y) {
+		delete[] _pieces[y];
+	}
+	delete[] _pieces;
 }
 
 Board& Board::operator=(const Board& rhs) {
@@ -108,20 +108,20 @@ Board& Board::operator=(const Board& rhs) {
 		}
 	}
 	
-    for (int y = 0; y < _height; ++y) {
-        for (int x = 0; x < _width; ++x) {
-            this->_pieces[y][x] = rhs._pieces[y][x];
-        }
-    }
-    return *this;
+	for (int y = 0; y < _height; ++y) {
+		for (int x = 0; x < _width; ++x) {
+			this->_pieces[y][x] = rhs._pieces[y][x];
+		}
+	}
+	return *this;
 }
 
 int8 Board::width() const {
-    return _width;
+	return _width;
 }
 
 int8 Board::height() const {
-    return _height;
+	return _height;
 }
 
 Piece Board::piece(Tile tile) const {
@@ -141,25 +141,25 @@ Piece &Board::operator[](Tile tile) {
 }
 
 bool Board::operator==(const Board &other) const {
-    if (this == &other) return true; // self-comparison
+	if (this == &other) return true; // self-comparison
 
-    // handle boards of different sizes
-    if (_width != other._width) return false;
-    if (_height != other._height) return false;
+	// handle boards of different sizes
+	if (_width != other._width) return false;
+	if (_height != other._height) return false;
 
-    // compare per piece
-    for (int y = 0; y < _height; ++y) {
-        for (int x = 0; x < _width; ++x) {
-            if (this->_pieces[y][x] != other._pieces[y][x])
-                return false;
-        }
-    }
+	// compare per piece
+	for (int y = 0; y < _height; ++y) {
+		for (int x = 0; x < _width; ++x) {
+			if (this->_pieces[y][x] != other._pieces[y][x])
+				return false;
+		}
+	}
 
-    return true;
+	return true;
 }
 
 bool Board::operator!=(const Board &other) const {
-    return !operator==(other);
+	return !operator==(other);
 }
 
 void Board::removePiece(Tile tile) {
@@ -203,38 +203,38 @@ Board Board::factoryStandard() {
 
 	static const Piece _ = Piece::NONE;
 	
-    Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
-           /* ******************************** */
-           /*   *     A B C D E F G H      *   */
-        {  /* 1 */  { R,N,B,Q,K,B,N,R },  /* 0 */
-           /* 2 */  { P,P,P,P,P,P,P,P },  /* 1 */
-           /* 3 */  { _,_,_,_,_,_,_,_ },  /* 2 */
-           /* 4 */  { _,_,_,_,_,_,_,_ },  /* 3 */
-           /* 5 */  { _,_,_,_,_,_,_,_ },  /* 4 */
-           /* 6 */  { _,_,_,_,_,_,_,_ },  /* 5 */
-           /* 7 */  { p,p,p,p,p,p,p,p },  /* 6 */
-           /* 8 */  { r,n,b,q,k,b,n,r }   /* 7 */  };
-           /*   *     0 1 2 3 4 5 6 7      *   */
-           /* ******************************** */
-    return Board(pieces);
+	Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
+		   /* ******************************** */
+		   /*   *     A B C D E F G H      *   */
+		{  /* 1 */  { R,N,B,Q,K,B,N,R },  /* 0 */
+		   /* 2 */  { P,P,P,P,P,P,P,P },  /* 1 */
+		   /* 3 */  { _,_,_,_,_,_,_,_ },  /* 2 */
+		   /* 4 */  { _,_,_,_,_,_,_,_ },  /* 3 */
+		   /* 5 */  { _,_,_,_,_,_,_,_ },  /* 4 */
+		   /* 6 */  { _,_,_,_,_,_,_,_ },  /* 5 */
+		   /* 7 */  { p,p,p,p,p,p,p,p },  /* 6 */
+		   /* 8 */  { r,n,b,q,k,b,n,r }   /* 7 */  };
+		   /*   *     0 1 2 3 4 5 6 7      *   */
+		   /* ******************************** */
+	return Board(pieces);
 }
 
 Board Board::factoryEmpty() {
 	static const Piece _ = Piece::NONE;
-    Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
-           /* ******************************** */
-           /*   *     A B C D E F G H      *   */
-        {  /* 1 */  { _,_,_,_,_,_,_,_ },  /* 0 */
-           /* 2 */  { _,_,_,_,_,_,_,_ },  /* 1 */
-           /* 3 */  { _,_,_,_,_,_,_,_ },  /* 2 */
-           /* 4 */  { _,_,_,_,_,_,_,_ },  /* 3 */
-           /* 5 */  { _,_,_,_,_,_,_,_ },  /* 4 */
-           /* 6 */  { _,_,_,_,_,_,_,_ },  /* 5 */
-           /* 7 */  { _,_,_,_,_,_,_,_ },  /* 6 */
-           /* 8 */  { _,_,_,_,_,_,_,_ }   /* 7 */  };
-           /*   *     0 1 2 3 4 5 6 7      *   */
-           /* ******************************** */
-    return Board(pieces);
+	Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
+		   /* ******************************** */
+		   /*   *     A B C D E F G H      *   */
+		{  /* 1 */  { _,_,_,_,_,_,_,_ },  /* 0 */
+		   /* 2 */  { _,_,_,_,_,_,_,_ },  /* 1 */
+		   /* 3 */  { _,_,_,_,_,_,_,_ },  /* 2 */
+		   /* 4 */  { _,_,_,_,_,_,_,_ },  /* 3 */
+		   /* 5 */  { _,_,_,_,_,_,_,_ },  /* 4 */
+		   /* 6 */  { _,_,_,_,_,_,_,_ },  /* 5 */
+		   /* 7 */  { _,_,_,_,_,_,_,_ },  /* 6 */
+		   /* 8 */  { _,_,_,_,_,_,_,_ }   /* 7 */  };
+		   /*   *     0 1 2 3 4 5 6 7      *   */
+		   /* ******************************** */
+	return Board(pieces);
 }
 
 const Tile Board::INVALID_TILE = Tile((int8)-1, (int8)-1);

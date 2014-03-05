@@ -116,7 +116,7 @@ void finilize(ProgramContext *pc) {
 
 int main(int argc, char** argv)
 {
-    //printTypeInformation();
+	//printTypeInformation();
 
 	ProgramContext pc;
 	pc.display = NULL;
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 	pc.view = NULL;
 	pc.panic = false;
 
-    initialize(argc, argv, &pc);
+	initialize(argc, argv, &pc);
 
 	if (pc.panic) {
 		fprintf(stderr, "Initialization failed.  Terminating program...\n");
@@ -246,6 +246,6 @@ int main(int argc, char** argv)
 
 	finilize(&pc);
 
-    // exit program success
-    return 0;
+	// exit program success
+	return 0;
 }

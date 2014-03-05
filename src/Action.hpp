@@ -31,8 +31,8 @@ enum ActionType : int8 {
 /** Holds all the information about one legal action that a player can take.
  */
 struct Action {
-    /** Which player is making the move? */
-    Player player;
+	/** Which player is making the move? */
+	Player player;
 	
 	/** What does the player want to do? */
 	ActionType type;

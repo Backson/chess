@@ -3,7 +3,7 @@
 #include "GameModel.hpp"
 
 Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
-    const Board &board = model.getBoard();
+	const Board &board = model.getBoard();
 	
 	Action a;
 	
@@ -39,7 +39,7 @@ Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
 		}
 	}
 
-    return a;
+	return a;
 }
 
 bool Rules::isActionLegal(const GameModel &model, Action a) {
@@ -49,37 +49,37 @@ bool Rules::isActionLegal(const GameModel &model, Action a) {
 	if (!board.isInBound(a.src) || !board.isInBound(a.dst))
 		return false;
 	
-    // is it this players turn?
-    switch (model.getGameState()) {
-    case STATE_WHITE_TURN:
-        if (a.player != PLAYER_WHITE)
-            return false;
-        break;
-    case STATE_BLACK_TURN:
-        if (a.player != PLAYER_BLACK)
-            return false;
-        break;
-    default:
-        return false;
-    }
+	// is it this players turn?
+	switch (model.getGameState()) {
+	case STATE_WHITE_TURN:
+		if (a.player != PLAYER_WHITE)
+			return false;
+		break;
+	case STATE_BLACK_TURN:
+		if (a.player != PLAYER_BLACK)
+			return false;
+		break;
+	default:
+		return false;
+	}
 
-    // is there a piece on src?
-    if (board[a.src].type == TYPE_NONE)
-        return false; // player wants to move an empty piece
+	// is there a piece on src?
+	if (board[a.src].type == TYPE_NONE)
+		return false; // player wants to move an empty piece
 
-    // is the piece owned by the player making the move?
-    if (board[a.src].player != a.player)
-        return false; // player wants to move his opponent's pieces
+	// is the piece owned by the player making the move?
+	if (board[a.src].player != a.player)
+		return false; // player wants to move his opponent's pieces
 
-    // has the piece actually moved?
-    if (a.src == a.dst)
-        return false; // the piece must not stay on its square
+	// has the piece actually moved?
+	if (a.src == a.dst)
+		return false; // the piece must not stay on its square
 	
 	// special cases
-    if (a.type == CASTLING) {
+	if (a.type == CASTLING) {
 		if (!isCastlingLegal(model, a))
 			return false;
-    } else if (a.type == EN_PASSANT) {
+	} else if (a.type == EN_PASSANT) {
 		if (!isEnPassantLegal(model, a))
 			return false;
 	} else {
@@ -88,7 +88,7 @@ bool Rules::isActionLegal(const GameModel &model, Action a) {
 	}
 
 	// do we end our turn in check?
-    GameModel result = model; // explicitly copy the current position
+	GameModel result = model; // explicitly copy the current position
 	result.action(a); // apply the move (should otherwise be legal by now)
 	if (isPlayerInCheck(result.getBoard(), a.player))
 		return false;
@@ -340,20 +340,20 @@ bool Rules::isPathFree(const Board &board, Tile src, Tile dst) {
 bool Rules::isSquareInRange(const Board &board, Tile src, Tile dst, bool capture) {
 	Tile d = dst - src;
 
-    // sort out moves, which end on the src square or outside the board
-    if (!board.isInBound(src) || !board.isInBound(dst))
-        return false;
-    if (d.norm2() == 0)
-        return false;
+	// sort out moves, which end on the src square or outside the board
+	if (!board.isInBound(src) || !board.isInBound(dst))
+		return false;
+	if (d.norm2() == 0)
+		return false;
 
 	/* Pawns are the only pieces with non trivial moving patterns.  They
 	 * behave differently for each player (because direction matters) and
 	 * also capture moves differ from non-capture ones.  This is why they get
 	 * a special treatment here.
 	 */
-    switch (board[src].type)
-    {
-    case TYPE_PAWN: {
+	switch (board[src].type)
+	{
+	case TYPE_PAWN: {
 		// generalize this section for both players
 		int8 direction;
 		int8 start_row;
@@ -389,32 +389,32 @@ bool Rules::isSquareInRange(const Board &board, Tile src, Tile dst, bool capture
 			return false;
 		}
 	} // case TYPE_PAWN
-    default:
-        return isSquareInRange(board[src].type, d);
+	default:
+		return isSquareInRange(board[src].type, d);
 	} // switch (piece.getType())
 }
 
 bool Rules::isSquareInRange(Type type, Tile d) {
-    // sort out moves, which end on the src square
-    if (d.norm2() == 0)
-        return false;
+	// sort out moves, which end on the src square
+	if (d.norm2() == 0)
+		return false;
 
-    switch (type) {
-    case TYPE_KING:
+	switch (type) {
+	case TYPE_KING:
 		return d.norm2() <= 2;
-    case TYPE_QUEEN:
+	case TYPE_QUEEN:
 		return d[0] == 0 || d[1] == 0 || d[0] * d[0] == d[1] * d[1];
-    case TYPE_ROOK:
-        return d[0] == 0 || d[1] == 0;
-    case TYPE_BISHOP:
-        return d[0] * d[0] == d[1] * d[1];
-    case TYPE_KNIGHT:
-        return d.norm2() == 5;
-    case TYPE_PAWN:
-        return false; // pawns can't be checked this way
-    default:
-        return false; // illegal piece type
-    }
+	case TYPE_ROOK:
+		return d[0] == 0 || d[1] == 0;
+	case TYPE_BISHOP:
+		return d[0] * d[0] == d[1] * d[1];
+	case TYPE_KNIGHT:
+		return d.norm2() == 5;
+	case TYPE_PAWN:
+		return false; // pawns can't be checked this way
+	default:
+		return false; // illegal piece type
+	}
 }
 
 bool Rules::hasLegalMove(const GameModel &model, Tile src) {
