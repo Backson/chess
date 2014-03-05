@@ -15,7 +15,7 @@ struct ProgramContext {
 	ALLEGRO_DISPLAY *display;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	
-	GameModel *model;
+	Position *position;
 	View *view;
 
 	bool panic;
@@ -62,7 +62,7 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		return;
 	}
 	
-	pc->model = new GameModel();
+	pc->position = new Position();
 	pc->view = new View(8, 8, WHITE_AT_THE_BOTTOM, 20);
 	
 	// init display
@@ -98,9 +98,9 @@ void finilize(ProgramContext *pc) {
 		delete pc->view;
 		pc->view = NULL;
 	}
-	if (pc->model) {
-		delete pc->model;
-		pc->model = NULL;
+	if (pc->position) {
+		delete pc->position;
+		pc->position = NULL;
 	}
 	View::deinitialize();
 	if (pc->display) {
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 	ProgramContext pc;
 	pc.display = NULL;
 	pc.event_queue = NULL;
-	pc.model = NULL;
+	pc.position = NULL;
 	pc.view = NULL;
 	pc.panic = false;
 
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 	
-	pc.model->start();
+	pc.position->start();
 	
 	bool shutdown = false;
 	Tile selection = Tile((int8)-1, (int8)-1);
@@ -153,8 +153,8 @@ int main(int argc, char** argv)
 				if (key == ALLEGRO_KEY_ESCAPE) {
 					shutdown = true;
 				} else if (key == ALLEGRO_KEY_R) {
-					*pc.model = GameModel();
-					pc.model->start();
+					*pc.position = Position();
+					pc.position->start();
 				} else if (key == ALLEGRO_KEY_O) {
 					float w = pc.view->getBoardWidth();
 					float h = pc.view->getBoardHeight();
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
-				const Board &board = pc.model->getBoard();
+				const Board &board = pc.position->board();
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
 				if (ev.mouse.button == 1) {
 					if (!board.isInBound(tile) || tile == selection) {
@@ -183,10 +183,10 @@ int main(int argc, char** argv)
 					Rules rules;
 					if (board.isInBound(selection)) {
 						Action action;
-						action = rules.examineMove(*pc.model, selection, tile);
-						bool is_legal = rules.isActionLegal(*pc.model, action);
+						action = rules.examineMove(*pc.position, selection, tile);
+						bool is_legal = rules.isActionLegal(*pc.position, action);
 						if (is_legal) {
-							pc.model->action(action);
+							pc.position->action(action);
 							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
 							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
 							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
@@ -196,9 +196,9 @@ int main(int argc, char** argv)
 							goto NEXT_EVENT;
 						}
 					}
-					//if (rules.hasLegalMove(*pc.model, tile))
+					//if (rules.hasLegalMove(*pc.position, tile))
 					else if(board.isInBound(selection)
-						|| board.piece(tile).player ==  pc.model->getActivePlayer())
+						|| board.piece(tile).player ==  pc.position->active_player())
 						selection = tile;
 					else
 						selection = board.INVALID_TILE;
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
 			break;
 		
 		al_set_target_backbuffer(al_get_current_display());
-		pc.view->draw(0.0, 0.0, *pc.model, selection);
+		pc.view->draw(0.0, 0.0, *pc.position, selection);
 		al_flip_display();
 		al_rest(0.01);
 	} // main loop

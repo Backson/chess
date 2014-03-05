@@ -1,7 +1,7 @@
 #ifndef RULES_HPP
 #define RULES_HPP
 
-#include "GameModel.hpp"
+#include "Position.hpp"
 
 /** Provides information about what moves are legal.
  *
@@ -17,27 +17,27 @@ public:
 	 * to guess what the player probably wants and then check whether that
 	 * move is legal afterwards with isMoveLegal.
 	 */
-	Action examineMove(const GameModel &, Tile src, Tile dst);
+	Action examineMove(const Position &, Tile src, Tile dst);
 	
 	/** Checks whether a particular move is legal by standard chess rules.
 	 */
-	bool isActionLegal(const GameModel &, Action a);
+	bool isActionLegal(const Position &, Action a);
 	
 	/** 
 	 */
-	bool isCastlingLegal(const GameModel &, Action a);
+	bool isCastlingLegal(const Position &, Action a);
 	 
 	/*
 	 */
-	bool isEnPassantLegal(const GameModel &, Action a);
+	bool isEnPassantLegal(const Position &, Action a);
 	 
 	/*
 	 */
-	bool isPromotionLegal(const GameModel &, Action a);
+	bool isPromotionLegal(const Position &, Action a);
 	
 	/* checks whether a move is legal that is not a castling or en passant.
 	 */
-	bool isRegularMoveLegal(const GameModel &, Action a);
+	bool isRegularMoveLegal(const Position &, Action a);
 	
 	Tile getKingStartingSquare(const Board &board, Player player);
 	Tile getRookStartingSquare(const Board &board, Player player, CastlingType type);
@@ -72,11 +72,11 @@ public:
 	
 	/** Checks whether a piece on a specific tile has any legal moves to make
 	 */
-	bool hasLegalMove(const GameModel &, Tile src);
+	bool hasLegalMove(const Position &, Tile src);
 	
 	/** Checks whether a legal move from src to dst exists
 	 */
-	bool hasLegalMove(const GameModel &, Tile src, Tile dst);
+	bool hasLegalMove(const Position &, Tile src, Tile dst);
 };
 
 #endif // RULES_HPP

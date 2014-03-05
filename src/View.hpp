@@ -3,7 +3,7 @@
 
 #include <allegro5/allegro.h>
 
-#include "GameModel.hpp"
+#include "Position.hpp"
 
 #define TILE_SIZE 50;
 
@@ -30,13 +30,13 @@ public:
 		Orientation orientation, float border_size);
 	~View();
 
-	void draw(float x, float y, const GameModel &model, Tile selection);
+	void draw(float x, float y, const Position &position, Tile selection);
 
 private:
-	void drawPanel(float x, float y, const GameModel &model, Tile selection);
+	void drawPanel(float x, float y, const Position &position, Tile selection);
 	void drawBorder(float x, float y);
 	void drawBorderDecoration(float x, float y);
-	void drawBoard(float x, float y, const GameModel &model, Tile selection);
+	void drawBoard(float x, float y, const Position &position, Tile selection);
 	void drawPiece(float x, float y, const Piece &piece, int whichTile);
 	void drawSelection(float x, float y);
 	void drawCursor(float x, float y);

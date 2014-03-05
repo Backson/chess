@@ -1,9 +1,9 @@
 #include "Rules.hpp"
 
-#include "GameModel.hpp"
+#include "Position.hpp"
 
-Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
-	const Board &board = model.getBoard();
+Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
+	const Board &board = position.board();
 	
 	Action a;
 	
@@ -42,15 +42,15 @@ Action Rules::examineMove(const GameModel &model, Tile src, Tile dst) {
 	return a;
 }
 
-bool Rules::isActionLegal(const GameModel &model, Action a) {
-	const Board &board = model.getBoard();
+bool Rules::isActionLegal(const Position &position, Action a) {
+	const Board &board = position.board();
 	
 	// catch any out of bound indices
 	if (!board.isInBound(a.src) || !board.isInBound(a.dst))
 		return false;
 	
 	// is it this players turn?
-	switch (model.getGameState()) {
+	switch (position.game_state()) {
 	case STATE_WHITE_TURN:
 		if (a.player != PLAYER_WHITE)
 			return false;
@@ -77,28 +77,28 @@ bool Rules::isActionLegal(const GameModel &model, Action a) {
 	
 	// special cases
 	if (a.type == CASTLING) {
-		if (!isCastlingLegal(model, a))
+		if (!isCastlingLegal(position, a))
 			return false;
 	} else if (a.type == EN_PASSANT) {
-		if (!isEnPassantLegal(model, a))
+		if (!isEnPassantLegal(position, a))
 			return false;
 	} else {
-		if (!isRegularMoveLegal(model, a))
+		if (!isRegularMoveLegal(position, a))
 			return false;
 	}
 
 	// do we end our turn in check?
-	GameModel result = model; // explicitly copy the current position
+	Position result = position; // explicitly copy the current position
 	result.action(a); // apply the move (should otherwise be legal by now)
-	if (isPlayerInCheck(result.getBoard(), a.player))
+	if (isPlayerInCheck(result.board(), a.player))
 		return false;
 	
 	// passed all tests
 	return true;
 }
 
-bool Rules::isCastlingLegal(const GameModel &model, Action a) {
-	const Board &board = model.getBoard();
+bool Rules::isCastlingLegal(const Position &position, Action a) {
+	const Board &board = position.board();
 	
 	// only allow castling for kings in the starting position
 	if (getKingStartingSquare(board, a.player) != a.src)
@@ -122,7 +122,7 @@ bool Rules::isCastlingLegal(const GameModel &model, Action a) {
 		return false;
 	
 	// was the king or the rook previously moved?
-	if (!model.canCastle(castling_type, a.player))
+	if (!position.canCastle(castling_type, a.player))
 		return false;
 	
 	// is there any piece between the king and the rook?
@@ -143,8 +143,8 @@ bool Rules::isCastlingLegal(const GameModel &model, Action a) {
 	return true;
 }
 
-bool Rules::isEnPassantLegal(const GameModel &model, Action a) {
-	const Board &board = model.getBoard();
+bool Rules::isEnPassantLegal(const Position &position, Action a) {
+	const Board &board = position.board();
 	
 	// only pawns can capture en passant
 	if (board[a.src].type != TYPE_PAWN)
@@ -165,14 +165,14 @@ bool Rules::isEnPassantLegal(const GameModel &model, Action a) {
 		return false;
 	
 	// there needs to be an en passant chance in that particular column
-	if (model.getEnPassantChanceFile() != a.dst[0])
+	if (position.getEnPassantChanceFile() != a.dst[0])
 		return false;
 	
 	return true;
 }
 
-bool Rules::isRegularMoveLegal(const GameModel &model, Action a) {
-	const Board &board = model.getBoard();
+bool Rules::isRegularMoveLegal(const Position &position, Action a) {
+	const Board &board = position.board();
 	
 	// can the piece actually move there (ignoring other pieces on the board)?
 	if (!isSquareInRange(board, a.src, a.dst, a.type == CAPTURE_PIECE))
@@ -417,18 +417,18 @@ bool Rules::isSquareInRange(Type type, Tile d) {
 	}
 }
 
-bool Rules::hasLegalMove(const GameModel &model, Tile src) {
-	const Board &board = model.getBoard();
+bool Rules::hasLegalMove(const Position &position, Tile src) {
+	const Board &board = position.board();
 	for (int8 y = 0; y < board.height(); ++y) {
 		for (int8 x = 0; x < board.width(); ++x) {
-			if (hasLegalMove(model, src, Tile(x, y)))
+			if (hasLegalMove(position, src, Tile(x, y)))
 				return true;
 		}
 	}
 	return false;
 }
 
-bool Rules::hasLegalMove(const GameModel &model, Tile src, Tile dst) {
-	Action action = examineMove(model, src, dst);
-	return isActionLegal(model, action);
+bool Rules::hasLegalMove(const Position &position, Tile src, Tile dst) {
+	Action action = examineMove(position, src, dst);
+	return isActionLegal(position, action);
 }

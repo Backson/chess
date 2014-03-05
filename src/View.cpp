@@ -37,12 +37,12 @@ View::~View() {
 	al_destroy_bitmap(_buffer);
 }
 
-void View::draw(float x, float y, const GameModel &model, Tile selection) {
-	drawPanel(x, y, model, selection);
+void View::draw(float x, float y, const Position &position, Tile selection) {
+	drawPanel(x, y, position, selection);
 }
 
-void View::drawPanel(float x, float y, const GameModel &model, Tile selection) {
-	const Board &board = model.getBoard();
+void View::drawPanel(float x, float y, const Position &position, Tile selection) {
+	const Board &board = position.board();
 	_x = x;
 	_y = y;
 	_board = board;
@@ -54,7 +54,7 @@ void View::drawPanel(float x, float y, const GameModel &model, Tile selection) {
 		}
 	}
 	const float border = getBorderSizePixels();
-	drawBoard(x + border, y + border, model, selection);
+	drawBoard(x + border, y + border, position, selection);
 }
 
 void View::drawBorder(float x, float y) {
@@ -81,8 +81,8 @@ void View::drawBorderDecoration(float x, float y) {
 	// TODO implement
 }
 
-void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
-	const Board &board = model.getBoard();
+void View::drawBoard(float x, float y, const Position &position, Tile selection) {
+	const Board &board = position.board();
 	ALLEGRO_MOUSE_STATE mouse;
 	al_get_mouse_state(&mouse);
 	Tile cursor = getTileAt(mouse.x, mouse.y);
@@ -103,7 +103,7 @@ void View::drawBoard(float x, float y, const GameModel &model, Tile selection) {
 			}
 			if (algebraic == cursor) {
 				bool has_sel = board.isInBound(selection);
-				bool owns_piece = board[cursor].player ==  model.getActivePlayer();
+				bool owns_piece = board[cursor].player ==  position.active_player();
 				if(has_sel || owns_piece)
 					drawCursor(piece_x, piece_y);
 			}

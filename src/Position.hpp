@@ -1,5 +1,5 @@
-#ifndef GAME_MODEL_HPP
-#define GAME_MODEL_HPP
+#ifndef POSITION_HPP
+#define POSITION_HPP
 
 #include "Action.hpp"
 #include "Board.hpp"
@@ -14,26 +14,26 @@ enum GameState
 	STATE_DRAW,
 };
 
-class GameModel
+class Position
 {
 public:
 	// LIFECYCLE
-	GameModel();
-	GameModel(const GameModel& other);
-	GameModel& operator=(const GameModel& other);
+	Position();
+	Position(const Position& other);
+	Position& operator=(const Position& other);
 
-	GameModel(const Board& board, GameState game_state, int en_passant_chance_file = -1);
+	Position(const Board& board, GameState game_state, int en_passant_chance_file = -1);
 
 	// OPERATORS
-	bool operator==(const GameModel& other) const;
-	bool operator!=(const GameModel& other) const;
+	bool operator==(const Position& other) const;
+	bool operator!=(const Position& other) const;
 
 	// ACCESS
-	const Board& getBoard() const;
-	Board& getBoard();
-	GameState getGameState() const;
-	bool isPlaying() const;
-	Player getActivePlayer() const;
+	const Board& board() const;
+	Board& board();
+	GameState game_state() const;
+	bool is_playing() const;
+	Player active_player() const;
 	
 	int getEnPassantChanceFile() const;
 	bool canCastle(CastlingType type, Player player) const;
@@ -50,4 +50,4 @@ private:
 	bool _castling_chances[2][2]; // ...[player][castling_type]
 };
 
-#endif // GAME_MODEL_HPP
+#endif // POSITION_HPP

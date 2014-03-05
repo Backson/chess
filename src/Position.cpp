@@ -1,4 +1,4 @@
-#include "GameModel.hpp"
+#include "Position.hpp"
 
 #include "Board.hpp"
 #include "Action.hpp"
@@ -7,7 +7,7 @@
 
 // LIFECYCLE
 
-GameModel::GameModel() :
+Position::Position() :
 	_board(Board::factoryStandard())
 {
 	_game_state = STATE_START;
@@ -18,7 +18,7 @@ GameModel::GameModel() :
 	_castling_chances[1][QUEENSIDE] = true;
 }
 
-GameModel::GameModel(const GameModel& other) :
+Position::Position(const Position& other) :
 	_board(other._board)
 {
 	_game_state = other._game_state;
@@ -29,7 +29,7 @@ GameModel::GameModel(const GameModel& other) :
 	_castling_chances[1][QUEENSIDE] = other._castling_chances[1][QUEENSIDE];
 }
 
-GameModel& GameModel::operator=(const GameModel& other)
+Position& Position::operator=(const Position& other)
 {
 	if (this == &other) return *this; // handle self assignment
 
@@ -44,7 +44,7 @@ GameModel& GameModel::operator=(const GameModel& other)
 	return *this;
 }
 
-GameModel::GameModel(const Board& board, GameState game_state, int en_passant_chance_file) :
+Position::Position(const Board& board, GameState game_state, int en_passant_chance_file) :
 	_board(board),
 	_game_state(game_state),
 	_en_passant_chance_file(en_passant_chance_file)
@@ -58,7 +58,7 @@ GameModel::GameModel(const Board& board, GameState game_state, int en_passant_ch
 
 // OPERATORS
 
-bool GameModel::operator==(const GameModel& other) const {
+bool Position::operator==(const Position& other) const {
 	if (_board != other._board)
 		return false;
 	if (_game_state != other._game_state)
@@ -76,29 +76,29 @@ bool GameModel::operator==(const GameModel& other) const {
 
 	return true;
 }
-bool GameModel::operator!=(const GameModel& other) const {
+bool Position::operator!=(const Position& other) const {
 	return !operator==(other);
 }
 
 // ACCESS
 
-const Board& GameModel::getBoard() const {
+const Board& Position::board() const {
 	return _board;
 }
 
-Board& GameModel::getBoard() {
+Board& Position::board() {
 	return _board;
 }
 
-GameState GameModel::getGameState() const {
+GameState Position::game_state() const {
 	return _game_state;
 }
 
-bool GameModel::isPlaying() const {
+bool Position::is_playing() const {
 	return _game_state == STATE_WHITE_TURN || _game_state == STATE_BLACK_TURN;
 }
 
-Player GameModel::getActivePlayer() const {
+Player Position::active_player() const {
 	if (_game_state == STATE_WHITE_TURN)
 		return PLAYER_WHITE;
 	if (_game_state == STATE_BLACK_TURN)
@@ -106,24 +106,24 @@ Player GameModel::getActivePlayer() const {
 	return PLAYER_WHITE;
 }
 
-int GameModel::getEnPassantChanceFile() const {
+int Position::getEnPassantChanceFile() const {
 	return _en_passant_chance_file;
 }
 
-bool GameModel::canCastle(CastlingType type, Player player) const {
+bool Position::canCastle(CastlingType type, Player player) const {
 	int player_i = player == PLAYER_WHITE ? 0 : 1;
 	return _castling_chances[player_i][type];
 }
 
 // OPERATIONS
 
-void GameModel::start() {
+void Position::start() {
 	if (_game_state == STATE_START)
 		_game_state = STATE_WHITE_TURN;
 }
 
-void GameModel::action(const Action& a) {
-	if (!isPlaying())
+void Position::action(const Action& a) {
+	if (!is_playing())
 		return;
 
 	int8 home_row = a.player == PLAYER_WHITE ? 0 : _board.height() - 1;

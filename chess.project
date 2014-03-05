@@ -82,8 +82,6 @@
   <VirtualDirectory Name="src">
     <File Name="src/Board.cpp"/>
     <File Name="src/Board.hpp"/>
-    <File Name="src/GameModel.cpp"/>
-    <File Name="src/GameModel.hpp"/>
     <File Name="src/main.cpp"/>
     <File Name="src/Piece.cpp"/>
     <File Name="src/Piece.hpp"/>
@@ -96,5 +94,7 @@
     <File Name="src/View.hpp"/>
     <File Name="src/Action.hpp"/>
     <File Name="src/Action.cpp"/>
+    <File Name="src/Position.cpp"/>
+    <File Name="src/Position.hpp"/>
   </VirtualDirectory>
 </CodeLite_Project>
