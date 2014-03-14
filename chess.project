@@ -96,5 +96,9 @@
     <File Name="src/Action.cpp"/>
     <File Name="src/Position.cpp"/>
     <File Name="src/Position.hpp"/>
+    <File Name="src/Game.hpp"/>
+    <File Name="src/Game.cpp"/>
+    <File Name="src/compare.hpp"/>
+    <File Name="src/compare.cpp"/>
   </VirtualDirectory>
 </CodeLite_Project>
