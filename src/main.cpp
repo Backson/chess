@@ -67,7 +67,7 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 	
 	// init display
 	al_set_new_display_flags(ALLEGRO_WINDOWED);
-	al_set_new_display_option(ALLEGRO_COLOR_SIZE, 24, ALLEGRO_REQUIRE);
+	//al_set_new_display_option(ALLEGRO_COLOR_SIZE, 24, ALLEGRO_REQUIRE);
 	pc->display = al_create_display(pc->view->getPanelWidthPixels(), pc->view->getPanelHeightPixels());
 	if (!pc->display) {
 		fprintf(stderr, "failed to create display!\n");
