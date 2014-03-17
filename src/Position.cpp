@@ -134,7 +134,15 @@ void Position::action(const Action& a) {
 	}
 
 	if (_board[a.src].type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
-		_en_passant_chance_file = a.dst[0];
+		Tile left = a.dst + Tile(-1, 0);
+		Tile right = a.dst + Tile(1, 0);
+		bool pawnLeft = _board.isInBound(left) && _board[left].type == TYPE_PAWN && _board[left].player != a.player;
+		bool pawnRight = _board.isInBound(right) && _board[right].type == TYPE_PAWN && _board[right].player != a.player;
+		if(pawnLeft || pawnRight) {
+			_en_passant_chance_file = a.dst[0];
+		} else {
+			_en_passant_chance_file = -1;
+		}
 	} else {
 		_en_passant_chance_file = -1;
 	}
