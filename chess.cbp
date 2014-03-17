@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="chess" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/chess" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/chess" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-std=c++11" />
+			<Add option="-Wall" />
+		</Compiler>
+		<Linker>
+			<Add option="-lallegro-static" />
+			<Add option="-lallegro_color-static" />
+			<Add option="-lallegro_image-static" />
+			<Add option="-lallegro_primitives-static" />
+			<Add option="-lgdiplus" />
+			<Add option="-luuid" />
+			<Add option="-lkernel32" />
+			<Add option="-lwinmm" />
+			<Add option="-lpsapi" />
+			<Add option="-lopengl32" />
+			<Add option="-lglu32" />
+			<Add option="-luser32" />
+			<Add option="-lcomdlg32" />
+			<Add option="-lgdi32" />
+			<Add option="-lshell32" />
+			<Add option="-lole32" />
+			<Add option="-ladvapi32" />
+			<Add option="-lws2_32" />
+			<Add option="-lshlwapi" />
+		</Linker>
+		<Unit filename="src/Action.cpp" />
+		<Unit filename="src/Action.hpp" />
+		<Unit filename="src/Board.cpp" />
+		<Unit filename="src/Board.hpp" />
+		<Unit filename="src/Game.cpp" />
+		<Unit filename="src/Game.hpp" />
+		<Unit filename="src/Piece.cpp" />
+		<Unit filename="src/Piece.hpp" />
+		<Unit filename="src/Position.cpp" />
+		<Unit filename="src/Position.hpp" />
+		<Unit filename="src/Rules.cpp" />
+		<Unit filename="src/Rules.hpp" />
+		<Unit filename="src/View.cpp" />
+		<Unit filename="src/View.hpp" />
+		<Unit filename="src/compare.cpp" />
+		<Unit filename="src/compare.hpp" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/stdtypes.hpp" />
+		<Unit filename="src/vec.cpp" />
+		<Unit filename="src/vec.hpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
