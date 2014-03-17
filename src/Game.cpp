@@ -33,6 +33,8 @@ int Game::half_turn_counter() {
 	return _half_turn_counter;
 }
 
-void action(const Action& action) {
-	
+void Game::action(const Action& a) {
+    Position position = current_position();
+    position.action(a);
+	_history.push_back({position, a, (int)_history.size()});
 }
