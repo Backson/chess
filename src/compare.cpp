@@ -11,8 +11,8 @@ bool BoardCompare::operator () (const Board &lhs, const Board &rhs) const {
 		return false;
 	auto w = lhs.width();
 	auto h = lhs.height();
-	for (uint8 y = 0; y < h; ++y)
-		for (uint8 x = 0; x < w; ++x) {
+	for (int8 y = 0; y < h; ++y)
+		for (int8 x = 0; x < w; ++x) {
 			auto tile = Tile(x, y);
 			auto a = lhs[tile];
 			auto b = rhs[tile];
@@ -46,8 +46,8 @@ bool PositionCompare::operator () (const Position &lhs, const Position &rhs) con
 			if (lhs_castle && !rhs_castle)
 				return false;
 		}
-	
+
 	// TODO en passant
-	
+
 	return false;
 }
