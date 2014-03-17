@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall -std=gnu++0x -g -I"."
 LDFLAGS=-L"." -lallegro -lallegro_primitives -lallegro_image
-SOURCES=Action.cpp Board.cpp GameModel.cpp main.cpp Piece.cpp Rules.cpp vec.cpp View.cpp
+SOURCES=Action.cpp Board.cpp Game.cpp Piece.cpp Position.cpp Rules.cpp View.cpp compare.cpp main.cpp vec.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 SRC_FILES=$(addprefix src/,$(SOURCES))
 OBJ_FILES=$(addprefix obj/,$(OBJECTS))
