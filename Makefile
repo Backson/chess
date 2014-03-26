@@ -1,15 +1,15 @@
 CC=g++
 CFLAGS=-c -Wall -std=gnu++0x -g -I"."
 LDFLAGS=-L"." -lallegro -lallegro_primitives -lallegro_image
-SOURCES=Action.cpp Board.cpp Game.cpp Piece.cpp Position.cpp Rules.cpp View.cpp compare.cpp main.cpp vec.cpp
+SOURCES=Action.cpp Board.cpp compare.cpp Game.cpp main.cpp Piece.cpp Position.cpp Rules.cpp vec.cpp View.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 SRC_FILES=$(addprefix src/,$(SOURCES))
 OBJ_FILES=$(addprefix obj/,$(OBJECTS))
 EXECUTABLE=chess
 
 all: $(SRC_FILES) $(EXECUTABLE)
-	
-$(EXECUTABLE): $(OBJ_FILES) 
+
+$(EXECUTABLE): $(OBJ_FILES)
 	$(CC) $(OBJ_FILES) $(LDFLAGS) -o $@
 
 obj/%.o : src/%.cpp

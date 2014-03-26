@@ -11,10 +11,14 @@
 #include "Piece.hpp"
 #include "Rules.hpp"
 
+static const int TIMER_BPS = 1000;
+static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
+
 struct ProgramContext {
 	ALLEGRO_DISPLAY *display;
 	ALLEGRO_EVENT_QUEUE *event_queue;
-	
+	ALLEGRO_TIMER *timer;
+
 	Position *position;
 	View *view;
 
@@ -29,55 +33,64 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		pc->panic = true;
 		return;
 	}
- 
-	// install keyboard
 	if (!al_install_keyboard()) {
 		fprintf(stderr, "failed to initialize keyboard driver!\n");
 		pc->panic = true;
 		return;
 	}
-
-	// install mouse
 	if (!al_install_mouse()) {
 		fprintf(stderr, "failed to initialize mouse driver!\n");
 		pc->panic = true;
 		return;
 	}
-
 	if (!al_init_image_addon()) {
 		fprintf(stderr, "failed to initialize image loading addon!\n");
 		pc->panic = true;
 		return;
 	}
-
 	if (!al_init_primitives_addon()) {
 		fprintf(stderr, "failed to initialize primitives drawing addon!\n");
 		pc->panic = true;
 		return;
 	}
-	
+
+    pc->timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
+    if (!pc->timer) {
+		pc->panic = true;
+		return;
+    }
+
 	if (View::initialize()) {
 		fprintf(stderr, "failed to initialize view!\n");
 		pc->panic = true;
 		return;
 	}
-	
-	pc->position = new Position();
-	pc->view = new View(8, 8, WHITE_AT_THE_BOTTOM, 20);
-	
+
+    // init game model
+    {
+        pc->position = new Position();
+        const Board &board = pc->position->board();
+        auto w = board.width();
+        auto h = board.height();
+        pc->view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
+    }
+
 	// init display
-	al_set_new_display_flags(ALLEGRO_WINDOWED);
-	//al_set_new_display_option(ALLEGRO_COLOR_SIZE, 24, ALLEGRO_REQUIRE);
-	pc->display = al_create_display(pc->view->getPanelWidthPixels(), pc->view->getPanelHeightPixels());
-	if (!pc->display) {
-		fprintf(stderr, "failed to create display!\n");
-		pc->panic = true;
-		return;
+	{
+        al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
+        int w = pc->view->getPanelWidthPixels();
+        int h = pc->view->getPanelHeightPixels();
+        pc->display = al_create_display(w, h);
+        if (!pc->display) {
+            fprintf(stderr, "failed to create display!\n");
+            pc->panic = true;
+            return;
+        }
 	}
 
 	// show systom mouse cursor
 	if (!al_show_mouse_cursor(pc->display)) {
-		fprintf(stderr, "WARNING: Could not show mouse cursor.  Cursor might be invisible.\n");
+		fprintf(stderr, "WARNING: Could not show mouse cursor.\n");
 	}
 
 	// init event queue
@@ -87,7 +100,7 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		pc->panic = true;
 		return;
 	}
-	
+
 	al_register_event_source(pc->event_queue, al_get_keyboard_event_source());
 	al_register_event_source(pc->event_queue, al_get_mouse_event_source());
 	al_register_event_source(pc->event_queue, al_get_display_event_source(pc->display));
@@ -103,6 +116,10 @@ void finilize(ProgramContext *pc) {
 		pc->position = NULL;
 	}
 	View::deinitialize();
+	if (pc->timer) {
+		al_destroy_timer(pc->timer);
+		pc->timer = NULL;
+	}
 	if (pc->display) {
 		al_destroy_display(pc->display);
 		pc->display = NULL;
@@ -129,19 +146,25 @@ int main(int argc, char** argv)
 
 	if (pc.panic) {
 		fprintf(stderr, "Initialization failed.  Terminating program...\n");
+		finilize(&pc);
 		exit(-1);
 	}
-	
+
+    al_start_timer(pc.timer);
 	pc.position->start();
-	
+
 	bool shutdown = false;
+	int fps_counter = 0;
+	int fps = 0;
+	int64 us_counter = 0;
+	int64 new_us_counter;
 	Tile selection = Tile((int8)-1, (int8)-1);
-	ALLEGRO_MOUSE_STATE mouse;
 	while (true) {
+        new_us_counter = US_PER_TICK * al_get_timer_count(pc.timer);
+
 		// fetch all events in the queue and process them in order
 		ALLEGRO_EVENT ev;
 		while (!shutdown && al_get_next_event(pc.event_queue, &ev)) {
-			al_get_mouse_state(&mouse);
 			// select event type
 			switch (ev.type) {
 			case ALLEGRO_EVENT_KEY_DOWN:
@@ -172,6 +195,8 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
+			    ALLEGRO_MOUSE_STATE mouse;
+			    al_get_mouse_state(&mouse);
 				const Board &board = pc.position->board();
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
 				if (ev.mouse.button == 1) {
@@ -179,7 +204,7 @@ int main(int argc, char** argv)
 						selection = board.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
-					
+
 					Rules rules;
 					if (board.isInBound(selection)) {
 						Action action;
@@ -215,7 +240,7 @@ int main(int argc, char** argv)
 
 			case ALLEGRO_EVENT_TIMER:
 				break;
-			
+
 			case ALLEGRO_EVENT_DISPLAY_EXPOSE:
 				break;
 			case ALLEGRO_EVENT_DISPLAY_RESIZE:
@@ -237,11 +262,19 @@ int main(int argc, char** argv)
 
 		if (shutdown)
 			break;
-		
+
+        // whenever a full second has passed
+        if (new_us_counter / 1000000 > us_counter / 1000000) {
+            fps = fps_counter;
+            fps_counter = 0;
+            printf("fps: %3d\n", fps);
+        }
+        us_counter = new_us_counter;
+
 		al_set_target_backbuffer(al_get_current_display());
 		pc.view->draw(0.0, 0.0, *pc.position, selection);
 		al_flip_display();
-		al_rest(0.01);
+		++fps_counter;
 	} // main loop
 
 	finilize(&pc);
