@@ -29,12 +29,11 @@ int Game::position_repetition_counter() const {
 	return position_repetition_counter(current_position());
 }
 
-int Game::half_turn_counter() {
-	return _half_turn_counter;
-}
-
 void Game::action(const Action& a) {
     Position position = current_position();
     position.action(a);
+    // add to history
 	_history.push_back({position, a, (int)_history.size()});
+	// increment position repetition counter
+	++_position_repetition[position];
 }

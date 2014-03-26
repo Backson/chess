@@ -34,9 +34,10 @@ public:
 	GameState game_state() const;
 	bool is_playing() const;
 	Player active_player() const;
-	
-	int getEnPassantChanceFile() const;
-	bool canCastle(CastlingType type, Player player) const;
+	int half_turn_counter() const;
+
+	int8 en_passant_chance_file() const;
+	bool can_castle(CastlingType type, Player player) const;
 
 	// OPERATIONS
 	void start();
@@ -46,8 +47,11 @@ private:
 	Board _board;
 	GameState _game_state;
 
-	int _en_passant_chance_file;
+	int8 _en_passant_chance_file;
 	bool _castling_chances[2][2]; // ...[player][castling_type]
+
+    /// how many half turns without a capture or pawn move
+	int _half_turn_counter;
 };
 
 #endif // POSITION_HPP

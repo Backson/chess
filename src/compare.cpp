@@ -25,7 +25,7 @@ bool BoardCompare::operator () (const Board &lhs, const Board &rhs) const {
 			if (a.type > b.type)
 				return false;
 		}
-	
+
 	return false;
 }
 
@@ -39,15 +39,24 @@ bool PositionCompare::operator () (const Position &lhs, const Position &rhs) con
 		for (int castling_i = 0; castling_i < 2; ++castling_i) {
 			auto castling = (CastlingType)castling_i;
 			auto player = (Player)player_i;
-			bool lhs_castle = lhs.canCastle(castling, player);
-			bool rhs_castle = rhs.canCastle(castling, player);
+			bool lhs_castle = lhs.can_castle(castling, player);
+			bool rhs_castle = rhs.can_castle(castling, player);
 			if (!lhs_castle && rhs_castle)
 				return true;
 			if (lhs_castle && !rhs_castle)
 				return false;
 		}
 
-	// TODO en passant
+	if (lhs.en_passant_chance_file() < rhs.en_passant_chance_file())
+		return true;
+	if (lhs.en_passant_chance_file() > rhs.en_passant_chance_file())
+		return false;
+
+	// ignore half_turn_counter
+//	if (lhs.half_turn_counter() < rhs.half_turn_counter())
+//		return true;
+//	if (lhs.half_turn_counter() > rhs.half_turn_counter())
+//		return false;
 
 	return false;
 }

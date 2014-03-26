@@ -16,6 +16,7 @@ Position::Position() :
 	_castling_chances[0][QUEENSIDE] = true;
 	_castling_chances[1][KINGSIDE]  = true;
 	_castling_chances[1][QUEENSIDE] = true;
+	_half_turn_counter = 0;
 }
 
 Position::Position(const Position& other) :
@@ -27,6 +28,7 @@ Position::Position(const Position& other) :
 	_castling_chances[0][QUEENSIDE] = other._castling_chances[0][QUEENSIDE];
 	_castling_chances[1][KINGSIDE]  = other._castling_chances[1][KINGSIDE];
 	_castling_chances[1][QUEENSIDE] = other._castling_chances[1][QUEENSIDE];
+	_half_turn_counter = other._half_turn_counter;
 }
 
 Position& Position::operator=(const Position& other)
@@ -40,6 +42,7 @@ Position& Position::operator=(const Position& other)
 	_castling_chances[0][QUEENSIDE] = other._castling_chances[0][QUEENSIDE];
 	_castling_chances[1][KINGSIDE]  = other._castling_chances[1][KINGSIDE];
 	_castling_chances[1][QUEENSIDE] = other._castling_chances[1][QUEENSIDE];
+	_half_turn_counter = other._half_turn_counter;
 
 	return *this;
 }
@@ -53,7 +56,7 @@ Position::Position(const Board& board, GameState game_state, int en_passant_chan
 	_castling_chances[0][QUEENSIDE] = false;
 	_castling_chances[1][KINGSIDE]  = false;
 	_castling_chances[1][QUEENSIDE] = false;
-	// nothing
+	_half_turn_counter = 0;
 }
 
 // OPERATORS
@@ -73,6 +76,10 @@ bool Position::operator==(const Position& other) const {
 		return false;
 	if (_castling_chances[PLAYER_BLACK][QUEENSIDE] != other._castling_chances[PLAYER_BLACK][QUEENSIDE])
 		return false;
+
+    // ignore half turn counter
+//	if (_half_turn_counter != other._half_turn_counter)
+//		return false;
 
 	return true;
 }
@@ -106,11 +113,15 @@ Player Position::active_player() const {
 	return PLAYER_WHITE;
 }
 
-int Position::getEnPassantChanceFile() const {
+int Position::half_turn_counter() const {
+    return _half_turn_counter;
+}
+
+int8 Position::en_passant_chance_file() const {
 	return _en_passant_chance_file;
 }
 
-bool Position::canCastle(CastlingType type, Player player) const {
+bool Position::can_castle(CastlingType type, Player player) const {
 	int player_i = player == PLAYER_WHITE ? 0 : 1;
 	return _castling_chances[player_i][type];
 }
@@ -126,7 +137,12 @@ void Position::action(const Action& a) {
 	if (!is_playing())
 		return;
 
-	int8 home_row = a.player == PLAYER_WHITE ? 0 : _board.height() - 1;
+    bool is_pawn_move = _board[a.src].type == TYPE_PAWN;
+    bool is_capture = a.type == CAPTURE_PIECE;
+    if (is_pawn_move || is_capture)
+        _half_turn_counter = 0;
+    else
+        ++_half_turn_counter;
 
 	if (_board[a.src].type == TYPE_KING) {
 		_castling_chances[a.player][KINGSIDE] = false;
@@ -134,8 +150,8 @@ void Position::action(const Action& a) {
 	}
 
 	if (_board[a.src].type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
-		Tile left = a.dst + Tile(-1, 0);
-		Tile right = a.dst + Tile(1, 0);
+		Tile left = a.dst + Tile((int8)-1, (int8)0);
+		Tile right = a.dst + Tile((int8)1, (int8)0);
 		bool pawnLeft = _board.isInBound(left) && _board[left].type == TYPE_PAWN && _board[left].player != a.player;
 		bool pawnRight = _board.isInBound(right) && _board[right].type == TYPE_PAWN && _board[right].player != a.player;
 		if(pawnLeft || pawnRight) {
@@ -148,6 +164,7 @@ void Position::action(const Action& a) {
 	}
 
 	if (a.type == CASTLING) {
+        int8 home_row = a.player == PLAYER_WHITE ? 0 : _board.height() - 1;
 		int8 sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
 		Tile rook_src = Tile((int8)(sx > 0 ? _board.width() - 1 : 0), home_row);
 		Tile rook_dst = a.src + Tile(sx, (int8)0);

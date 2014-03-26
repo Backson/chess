@@ -27,8 +27,7 @@ public:
 	const Position &current_position() const;
 	int position_repetition_counter(const Position &) const;
 	int position_repetition_counter() const;
-	int half_turn_counter();
-	
+
 	void action(const Action& action);
 	
 private:
@@ -36,8 +35,6 @@ private:
 	std::list<PositionListEntry> _history;
 	/// track the number of times each position has occured
 	std::map<Position, int, PositionCompare> _position_repetition;
-	/// how many half turns without a capture or pawn move
-	int _half_turn_counter;
 };
 
 #endif // GAME_HPP
