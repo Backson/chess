@@ -4,8 +4,7 @@
 #include "Action.hpp"
 #include "Board.hpp"
 
-enum GameState
-{
+enum GameState {
 	STATE_START,
 	STATE_WHITE_TURN,
 	STATE_BLACK_TURN,
@@ -14,8 +13,7 @@ enum GameState
 	STATE_DRAW,
 };
 
-class Position
-{
+class Position {
 public:
 	// LIFECYCLE
 	Position();

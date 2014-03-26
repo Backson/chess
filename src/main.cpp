@@ -138,6 +138,7 @@ int main(int argc, char** argv)
 	ProgramContext pc;
 	pc.display = NULL;
 	pc.event_queue = NULL;
+	pc.timer = NULL;
 	pc.position = NULL;
 	pc.view = NULL;
 	pc.panic = false;
