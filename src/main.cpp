@@ -199,34 +199,43 @@ int main(int argc, char** argv)
 			    al_get_mouse_state(&mouse);
 				const Board &board = pc.position->board();
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
+				Player active_player = pc.position->active_player();
 				if (ev.mouse.button == 1) {
-					if (!board.isInBound(tile) || tile == selection) {
+                    // click outside the board
+					if (!board.isInBound(tile)) {
 						selection = board.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 
-					Rules rules;
-					if (board.isInBound(selection)) {
-						Action action;
-						action = rules.examineMove(*pc.position, selection, tile);
-						bool is_legal = rules.isActionLegal(*pc.position, action);
-						if (is_legal) {
-							pc.position->action(action);
-							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
-							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
-							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
-							printf(" id:%d", action.type);
-							printf(" (promote to %d)\n", action.promotion);
-							selection = board.INVALID_TILE;
-							goto NEXT_EVENT;
-						}
-					}
-					//if (rules.hasLegalMove(*pc.position, tile))
-					else if(board.isInBound(selection)
-						|| board.piece(tile).player ==  pc.position->active_player())
-						selection = tile;
-					else
+					// clicked already selected piece
+					if (tile == selection) {
 						selection = board.INVALID_TILE;
+						goto NEXT_EVENT;
+					}
+
+                    // clicked another self owned piece
+					if (board[tile].player ==  active_player) {
+						selection = tile;
+						goto NEXT_EVENT;
+					}
+
+                    // tried to make a move
+                    {
+                        Rules rules;
+                        Action action;
+                        action = rules.examineMove(*pc.position, selection, tile);
+                        bool is_legal = rules.isActionLegal(*pc.position, action);
+                        if (is_legal) {
+                            pc.position->action(action);
+                            printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
+                            printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
+                            printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
+                            printf(" id:%d", action.type);
+                            printf(" (promote to %d)\n", action.promotion);
+                            selection = board.INVALID_TILE;
+                            goto NEXT_EVENT;
+                        }
+                    }
 				}
 				break;
 			}
