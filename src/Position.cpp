@@ -8,187 +8,144 @@
 // LIFECYCLE
 
 Position::Position() :
-	_board(Board::factoryStandard())
+    Board()
 {
-	_game_state = STATE_START;
-	_en_passant_chance_file = -1;
-	_castling_chances[0][KINGSIDE]  = true;
-	_castling_chances[0][QUEENSIDE] = true;
-	_castling_chances[1][KINGSIDE]  = true;
-	_castling_chances[1][QUEENSIDE] = true;
-	_half_turn_counter = 0;
+    _active_player = PLAYER_WHITE;
+	_en_passant_file = -1;
+	_can_castle[0][0] = true;
+	_can_castle[0][1] = true;
+	_can_castle[1][0] = true;
+	_can_castle[1][1] = true;
 }
 
-Position::Position(const Position& other) :
-	_board(other._board)
+Position::Position(Coord width, Coord height) :
+    Board(width, height)
 {
-	_game_state = other._game_state;
-	_en_passant_chance_file = other._en_passant_chance_file;
-	_castling_chances[0][KINGSIDE]  = other._castling_chances[0][KINGSIDE];
-	_castling_chances[0][QUEENSIDE] = other._castling_chances[0][QUEENSIDE];
-	_castling_chances[1][KINGSIDE]  = other._castling_chances[1][KINGSIDE];
-	_castling_chances[1][QUEENSIDE] = other._castling_chances[1][QUEENSIDE];
-	_half_turn_counter = other._half_turn_counter;
+    _active_player = PLAYER_NONE;
+	_en_passant_file = -1;
+	_can_castle[0][0] = false;
+	_can_castle[0][1] = false;
+	_can_castle[1][0] = false;
+	_can_castle[1][1] = false;
 }
 
-Position& Position::operator=(const Position& other)
+Position::Position(const Board &board, Player active_player) :
+	Board(board)
 {
-	if (this == &other) return *this; // handle self assignment
-
-	_board = other._board;
-	_game_state = other._game_state;
-	_en_passant_chance_file = other._en_passant_chance_file;
-	_castling_chances[0][KINGSIDE]  = other._castling_chances[0][KINGSIDE];
-	_castling_chances[0][QUEENSIDE] = other._castling_chances[0][QUEENSIDE];
-	_castling_chances[1][KINGSIDE]  = other._castling_chances[1][KINGSIDE];
-	_castling_chances[1][QUEENSIDE] = other._castling_chances[1][QUEENSIDE];
-	_half_turn_counter = other._half_turn_counter;
-
-	return *this;
-}
-
-Position::Position(const Board& board, GameState game_state, int en_passant_chance_file) :
-	_board(board),
-	_game_state(game_state),
-	_en_passant_chance_file(en_passant_chance_file)
-{
-	_castling_chances[0][KINGSIDE]  = false;
-	_castling_chances[0][QUEENSIDE] = false;
-	_castling_chances[1][KINGSIDE]  = false;
-	_castling_chances[1][QUEENSIDE] = false;
-	_half_turn_counter = 0;
+    _active_player = active_player;
+    _en_passant_file = -1;
+	_can_castle[0][0] = false;
+	_can_castle[0][1] = false;
+	_can_castle[1][0] = false;
+	_can_castle[1][1] = false;
 }
 
 // OPERATORS
 
-bool Position::operator==(const Position& other) const {
-	if (_board != other._board)
-		return false;
-	if (_game_state != other._game_state)
-		return false;
-	if (_en_passant_chance_file != other._en_passant_chance_file)
-		return false;
-	if (_castling_chances[PLAYER_WHITE][KINGSIDE] != other._castling_chances[PLAYER_WHITE][KINGSIDE])
-		return false;
-	if (_castling_chances[PLAYER_WHITE][QUEENSIDE] != other._castling_chances[PLAYER_WHITE][QUEENSIDE])
-		return false;
-	if (_castling_chances[PLAYER_BLACK][KINGSIDE] != other._castling_chances[PLAYER_BLACK][KINGSIDE])
-		return false;
-	if (_castling_chances[PLAYER_BLACK][QUEENSIDE] != other._castling_chances[PLAYER_BLACK][QUEENSIDE])
+bool Position::operator == (const Position &other) const {
+	if (Board::operator != (other))
 		return false;
 
-    // ignore half turn counter
-//	if (_half_turn_counter != other._half_turn_counter)
-//		return false;
+	if (_active_player != other._active_player)
+		return false;
+	if (_en_passant_file != other._en_passant_file)
+		return false;
+	if (_can_castle[0][0] != other._can_castle[0][0])
+		return false;
+	if (_can_castle[0][1] != other._can_castle[0][1])
+		return false;
+	if (_can_castle[1][0] != other._can_castle[1][0])
+		return false;
+	if (_can_castle[1][1] != other._can_castle[1][1])
+		return false;
 
 	return true;
 }
-bool Position::operator!=(const Position& other) const {
-	return !operator==(other);
+bool Position::operator != (const Position &other) const {
+	return !operator == (other);
 }
 
 // ACCESS
 
-const Board& Position::board() const {
-	return _board;
-}
-
-Board& Position::board() {
-	return _board;
-}
-
-GameState Position::game_state() const {
-	return _game_state;
-}
-
-bool Position::is_playing() const {
-	return _game_state == STATE_WHITE_TURN || _game_state == STATE_BLACK_TURN;
-}
-
 Player Position::active_player() const {
-	if (_game_state == STATE_WHITE_TURN)
-		return PLAYER_WHITE;
-	if (_game_state == STATE_BLACK_TURN)
-		return PLAYER_BLACK;
-	return PLAYER_WHITE;
+	return _active_player;
 }
 
-int Position::half_turn_counter() const {
-    return _half_turn_counter;
+Player &Position::active_player() {
+	return _active_player;
 }
 
-int8 Position::en_passant_chance_file() const {
-	return _en_passant_chance_file;
+Coord Position::en_passant_file() const {
+    return _en_passant_file;
 }
 
-bool Position::can_castle(CastlingType type, Player player) const {
-	int player_i = player == PLAYER_WHITE ? 0 : 1;
-	return _castling_chances[player_i][type];
+Coord &Position::en_passant_file() {
+    return _en_passant_file;
+}
+
+bool Position::can_castle(Player player, CastlingType type) const {
+    return _can_castle[player][type];
+}
+
+bool &Position::can_castle(Player player, CastlingType type) {
+    return _can_castle[player][type];
 }
 
 // OPERATIONS
 
-void Position::start() {
-	if (_game_state == STATE_START)
-		_game_state = STATE_WHITE_TURN;
-}
+void Position::action(const Action &a) {
+    const Player opponent = static_cast<Player>(1 - _active_player);
 
-void Position::action(const Action& a) {
-	if (!is_playing())
-		return;
-
-    bool is_pawn_move = _board[a.src].type == TYPE_PAWN;
-    bool is_capture = a.type == CAPTURE_PIECE;
-    if (is_pawn_move || is_capture)
-        _half_turn_counter = 0;
-    else
-        ++_half_turn_counter;
-
-	if (_board[a.src].type == TYPE_KING) {
-		_castling_chances[a.player][KINGSIDE] = false;
-		_castling_chances[a.player][QUEENSIDE] = false;
+    // check for king moves
+	if (piece(a.src).type == TYPE_KING) {
+		_can_castle[a.player][KINGSIDE] = false;
+		_can_castle[a.player][QUEENSIDE] = false;
 	}
 
-	if (_board[a.src].type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
-		Tile left = a.dst + Tile((int8)-1, (int8)0);
-		Tile right = a.dst + Tile((int8)1, (int8)0);
-		bool pawnLeft = _board.isInBound(left) && _board[left].type == TYPE_PAWN && _board[left].player != a.player;
-		bool pawnRight = _board.isInBound(right) && _board[right].type == TYPE_PAWN && _board[right].player != a.player;
+    // set the en passant chance
+    _en_passant_file = -1;
+	if (piece(a.src).type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
+		Tile left = a.dst + Tile(-1, 0);
+		Tile right = a.dst + Tile(1, 0);
+		Piece p = Piece{opponent, TYPE_PAWN};
+		bool pawnLeft = isInBound(left) && piece(left) == p;
+		bool pawnRight = isInBound(right) && piece(left) == p;
 		if(pawnLeft || pawnRight) {
-			_en_passant_chance_file = a.dst[0];
-		} else {
-			_en_passant_chance_file = -1;
+			_en_passant_file = a.dst[0];
 		}
-	} else {
-		_en_passant_chance_file = -1;
 	}
 
+    // check for rook moves
+    for (int player = 0; player < 2; ++player)
+        for (int castling = 0; castling < 2; ++castling) {
+            Coord x = castling == KINGSIDE ? width() - 1 : 0;
+            Coord y = player == PLAYER_WHITE ? 0 : height() - 1;
+            if (a.src == Tile(x, y) || a.dst == Tile(x, y))
+                _can_castle[player][castling] = false;
+        }
+
+    // actually move the piece
+    movePiece(a.src, a.dst);
+
+    // move the rook (castlings only)
 	if (a.type == CASTLING) {
-        int8 home_row = a.player == PLAYER_WHITE ? 0 : _board.height() - 1;
-		int8 sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
-		Tile rook_src = Tile((int8)(sx > 0 ? _board.width() - 1 : 0), home_row);
-		Tile rook_dst = a.src + Tile(sx, (int8)0);
-		_board.movePiece(a.src, a.dst);
-		_board.movePiece(rook_src, rook_dst);
-	} else {
-		for (int player = 0; player < 2; ++player)
-			for (int castling = 0; castling < 2; ++castling) {
-				int8 x = castling == KINGSIDE ? _board.width() - 1 : 0;
-				int8 y = player == PLAYER_WHITE ? 0 : _board.height() - 1;
-				if (a.src == Tile(x, y) || a.dst == Tile(x, y))
-					_castling_chances[player][castling] = false;
-			}
-		
-		_board.movePiece(a.src, a.dst);
+        Coord home_row = a.player == PLAYER_WHITE ? 0 : height() - 1;
+		Coord sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
+		Tile rook_src = Tile(sx > 0 ? width() - 1 : 0, home_row);
+		Tile rook_dst = a.src + Tile(sx, 0);
+		movePiece(rook_src, rook_dst);
 	}
-	
+
+    // do piece transformations
 	if (a.promotion != TYPE_NONE) {
-		_board[a.dst] = Piece{_board[a.dst].player, a.promotion};
+		piece(a.dst) = Piece{piece(a.dst).player, a.promotion};
 	}
-	
+
+    // remove pieces that were captured en passant
 	if (a.type == EN_PASSANT) {
-		_board.removePiece(Tile(a.dst[0], a.src[1]));
+		removePiece(Tile(a.dst[0], a.src[1]));
 	}
-	
-	_game_state = _game_state == STATE_WHITE_TURN ? STATE_BLACK_TURN : STATE_WHITE_TURN;
+
+    // next player
+    _active_player = opponent;
 }

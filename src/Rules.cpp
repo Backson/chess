@@ -3,17 +3,15 @@
 #include "Position.hpp"
 
 Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
-	const Board &board = position.board();
-
 	Action a;
 
-	if (!board.isInBound(src)) {
+	if (!position.isInBound(src)) {
 		a.player = PLAYER_NONE;
 		a.type = DO_NOTHING;
 		return a;
 	}
-	a.player = board[src].player;
-	if (!board.isInBound(dst)) {
+	a.player = position[src].player;
+	if (!position.isInBound(dst)) {
 		a.type = DO_NOTHING;
 		return a;
 	}
@@ -21,19 +19,19 @@ Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
 	a.src = src;
 	a.dst = dst;
 
-	if (board[dst] != Piece::NONE) {
+	if (position[dst] != Piece::NONE) {
 		a.type = CAPTURE_PIECE;
-	} else if (board[src].type == TYPE_KING && (dst - src).norm2() > 2) {
+	} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
 		a.type = CASTLING;
-	} else if (board[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
+	} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
 		a.type = EN_PASSANT;
 	} else {
 		a.type = MOVE_PIECE;
 	}
 
 	a.promotion = TYPE_NONE;
-	if (board[src].type == TYPE_PAWN) {
-		if (dst[1] == board.height() - 1 || dst[1] == 0) {
+	if (position[src].type == TYPE_PAWN) {
+		if (dst[1] == position.height() - 1 || dst[1] == 0) {
 			// TODO let the player choose promotion type himself
 			a.promotion = TYPE_QUEEN;
 		}
@@ -43,32 +41,19 @@ Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
 }
 
 bool Rules::isActionLegal(const Position &position, Action a) {
-	const Board &board = position.board();
-
 	// catch any out of bound indices
-	if (!board.isInBound(a.src) || !board.isInBound(a.dst))
+	if (!position.isInBound(a.src) || !position.isInBound(a.dst))
 		return false;
 
 	// is it this players turn?
-	switch (position.game_state()) {
-	case STATE_WHITE_TURN:
-		if (a.player != PLAYER_WHITE)
-			return false;
-		break;
-	case STATE_BLACK_TURN:
-		if (a.player != PLAYER_BLACK)
-			return false;
-		break;
-	default:
-		return false;
-	}
+	a.player = position.active_player();
 
 	// is there a piece on src?
-	if (board[a.src].type == TYPE_NONE)
+	if (position[a.src].type == TYPE_NONE)
 		return false; // player wants to move an empty piece
 
 	// is the piece owned by the player making the move?
-	if (board[a.src].player != a.player)
+	if (position[a.src].player != a.player)
 		return false; // player wants to move his opponent's pieces
 
 	// has the piece actually moved?
@@ -90,7 +75,7 @@ bool Rules::isActionLegal(const Position &position, Action a) {
 	// do we end our turn in check?
 	Position result = position; // explicitly copy the current position
 	result.action(a); // apply the move (should otherwise be legal by now)
-	if (isPlayerInCheck(result.board(), a.player))
+	if (isPlayerInCheck(result, a.player))
 		return false;
 
 	// passed all tests
@@ -98,12 +83,10 @@ bool Rules::isActionLegal(const Position &position, Action a) {
 }
 
 bool Rules::isCastlingLegal(const Position &position, Action a) {
-	const Board &board = position.board();
-
 	// only allow castling for kings in the starting position
-	if (getKingStartingSquare(board, a.player) != a.src)
+	if (getKingStartingSquare(position, a.player) != a.src)
 		return false;
-	if (board[a.src].type != TYPE_KING)
+	if (position[a.src].type != TYPE_KING)
 		return false;
 
 	// which of the two castlings is being performed?
@@ -117,84 +100,80 @@ bool Rules::isCastlingLegal(const Position &position, Action a) {
 		return false;
 
 	// is there a rook where it needs to be?
-	Tile rook = getRookStartingSquare(board, a.player, castling_type);
-	if (board[rook].type != TYPE_ROOK)
+	Tile rook = getRookStartingSquare(position, a.player, castling_type);
+	if (position[rook].type != TYPE_ROOK)
 		return false;
 
 	// was the king or the rook previously moved?
-	if (!position.can_castle(castling_type, a.player))
+	if (!position.can_castle(a.player, castling_type))
 		return false;
 
 	// is there any piece between the king and the rook?
-	if (!isPathFree(board, a.src, rook))
+	if (!isPathFree(position, a.src, rook))
 		return false;
 
 	// is the player performing the castling currently in check?
 	Player opponent = a.player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
-	if (doesPlayerAttackSquare(board, a.src, opponent))
+	if (doesPlayerAttackSquare(position, a.src, opponent))
 		return false;
 
 	// is the square the king passes over currently attacked?
 	Tile step = Tile((int8)(castling_type == KINGSIDE ? +1 : -1), (int8)0);
 	Tile passing_by = a.src + step;
-	if (doesPlayerAttackSquare(board, passing_by, opponent))
+	if (doesPlayerAttackSquare(position, passing_by, opponent))
 		return false;
 
 	return true;
 }
 
 bool Rules::isEnPassantLegal(const Position &position, Action a) {
-	const Board &board = position.board();
-
 	// only pawns can capture en passant
-	if (board[a.src].type != TYPE_PAWN)
+	if (position[a.src].type != TYPE_PAWN)
 		return false;
 
 	// the pawn must be able to reach dst by a capture move
-	if (!isSquareInRange(board, a.src, a.dst, true))
+	if (!isSquareInRange(position, a.src, a.dst, true))
 		return false;
 
 	// but that tile needs to be empty
-	if (board[a.dst] != Piece::NONE)
+	if (position[a.dst] != Piece::NONE)
 		return false;
 
 	// there needs to be an enemy pawn that has passed the current pawn
 	Tile opponent_pawn = Tile(a.dst[0], a.src[1]);
 	Player opponent = a.player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
-	if (board[opponent_pawn] != Piece{opponent, TYPE_PAWN})
+	if (position[opponent_pawn] != Piece{opponent, TYPE_PAWN})
 		return false;
 
 	// there needs to be an en passant chance in that particular column
-	if (position.en_passant_chance_file() != a.dst[0])
+	if (position.en_passant_file() != a.dst[0])
 		return false;
 
 	return true;
 }
 
 bool Rules::isRegularMoveLegal(const Position &position, Action a) {
-	const Board &board = position.board();
-
 	// can the piece actually move there (ignoring other pieces on the board)?
-	if (!isSquareInRange(board, a.src, a.dst, a.type == CAPTURE_PIECE))
+	if (!isSquareInRange(position, a.src, a.dst, a.type == CAPTURE_PIECE))
 		return false;
 
 	// capturing moves
 	if (a.type == CAPTURE_PIECE) {
 		// can't capture empty tiles
-		if (board[a.dst].type == TYPE_NONE)
+		if (position[a.dst].type == TYPE_NONE)
 			return false;
 		// can't capture your own pieces
-		if (board[a.dst].player == a.player)
+		if (position[a.dst].player == a.player)
 			return false;
 	} else {
 		// target square must be empty for non-capture moves
-		if (board[a.dst].type != TYPE_NONE)
+		if (position[a.dst].type != TYPE_NONE)
 			return false;
 	}
 
 	// check for promotions
-	int8 end_row = a.player == PLAYER_WHITE ? board.width() - 1 : 0;
-	if (board[a.src].type == TYPE_PAWN && a.dst[1] == end_row) {
+	Coord end_row = a.player == PLAYER_WHITE ? position.width() - 1 : 0;
+	if (position[a.src].type == TYPE_PAWN && a.dst[1] == end_row) {
 		switch (a.promotion) {
 			case TYPE_NONE:
 			case TYPE_PAWN:
@@ -209,8 +188,8 @@ bool Rules::isRegularMoveLegal(const Position &position, Action a) {
 	}
 
 	// check whether the path between src and dest is actually free
-	if (board[a.src].type != TYPE_KNIGHT)
-		if (!isPathFree(board, a.src, a.dst))
+	if (position[a.src].type != TYPE_KNIGHT)
+		if (!isPathFree(position, a.src, a.dst))
 			return false;
 
 	return true;
@@ -418,9 +397,8 @@ bool Rules::isSquareInRange(Type type, Tile d) {
 }
 
 bool Rules::hasLegalMove(const Position &position, Tile src) {
-	const Board &board = position.board();
-	for (int8 y = 0; y < board.height(); ++y) {
-		for (int8 x = 0; x < board.width(); ++x) {
+	for (Coord y = 0; y < position.height(); ++y) {
+		for (Coord x = 0; x < position.width(); ++x) {
 			if (hasLegalMove(position, src, Tile(x, y)))
 				return true;
 		}

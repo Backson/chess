@@ -1,126 +1,156 @@
 #include "Board.hpp"
 
-Board::Board() :
-	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y) {
-		this->_pieces[y] = new Piece[_width];
+// LIFECYCLE
 
-		for (int x = 0; x < _width; ++x) {
-			this->_pieces[y][x] = Piece::NONE;
-		}
-	}
+Board::~Board() {
+    if (_pieces) {
+        for (Coord y = 0; y < _height; ++y)
+            delete[] _pieces[y];
+        delete[] _pieces;
+    }
 }
 
-Board::Board(int width, int height) :
-	_width(width), _height(height)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y) {
-		this->_pieces[y] = new Piece[_width];
-
-		for (int x = 0; x < _width; ++x) {
-			this->_pieces[y][x] = Piece::NONE;
-		}
-	}
-}
-
-Board::Board(const Board& other) :
-	_width(other._width), _height(other._height)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y) {
-		this->_pieces[y] = new Piece[_width];
-
-		for (int x = 0; x < _width; ++x) {
-			this->_pieces[y][x] = other._pieces[y][x];
-		}
-	}
-}
-
-Board::Board(const Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT]) :
-	_width(BOARD_HEIGHT_DEFAULT), _height(BOARD_WIDTH_DEFAULT)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y) {
+Board::Board(const Board &other) {
+    _width = other._width;
+    _height = other._height;
+	_pieces = new Piece*[_height];
+	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
 
-		for (int x = 0; x < _width; ++x) {
-			_pieces[y][x] = pieces[y][x];
+		for (Coord x = 0; x < _width; ++x) {
+			_pieces[y][x] = other._pieces[y][x];
 		}
 	}
 }
 
-Board::Board(const Piece **pieces) :
-	_width(BOARD_WIDTH_DEFAULT), _height(BOARD_HEIGHT_DEFAULT)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y) {
-		this->_pieces[y] = new Piece[_width];
-
-		for (int x = 0; x < _width; ++x)
-		{
-			this->_pieces[y][x] = pieces[y][x];
-		}
-	}
+Board::Board(Board &&other) {
+    _width = other._width;
+    _height = other._height;
+	_pieces = other._pieces;
+	other._pieces = nullptr;
 }
 
-Board::Board(const Piece **pieces, int width, int height) :
-	_width(width), _height(height)
-{
-	this->_pieces = new Piece*[_height];
-	for (int y = 0; y < _height; ++y)
-	{
-		this->_pieces[y] = new Piece[_width];
-
-		for (int x = 0; x < _width; ++x)
-		{
-			this->_pieces[y][x] = pieces[y][x];
-		}
-	}
-}
-
-Board::~Board()
-{
-	for (int y = 0; y < _height; ++y) {
-		delete[] _pieces[y];
-	}
-	delete[] _pieces;
-}
-
-Board& Board::operator=(const Board& rhs) {
+Board &Board::operator = (const Board &rhs) {
 	if (this == &rhs) return *this; // self assignment
-	
-	bool resize = _width != rhs._width || _height != rhs._height;
-	if (resize) {
-		for (int y = 0; y < _height; ++y) {
-			delete[] _pieces[y];
-		}
-		delete[] _pieces;
-		
+
+	bool must_resize = _width != rhs._width || _height != rhs._height;
+	if (must_resize) {
+	    if (_pieces) {
+            for (Coord y = 0; y < _height; ++y)
+                delete[] _pieces[y];
+            delete[] _pieces;
+	    }
+
 		_width = rhs._width;
 		_height = rhs._height;
-		
+
 		_pieces = new Piece*[_height];
-		for (int y = 0; y < _height; ++y) {
+		for (Coord y = 0; y < _height; ++y) {
 			_pieces[y] = new Piece[_width];
 		}
 	}
-	
-	for (int y = 0; y < _height; ++y) {
-		for (int x = 0; x < _width; ++x) {
+
+	for (Coord y = 0; y < _height; ++y) {
+		for (Coord x = 0; x < _width; ++x) {
 			this->_pieces[y][x] = rhs._pieces[y][x];
 		}
 	}
 	return *this;
 }
 
-int8 Board::width() const {
+Board &Board::operator = (Board &&rhs) {
+	if (this == &rhs) return *this; // self assignment
+
+    if (_pieces) {
+        for (Coord y = 0; y < _height; ++y)
+            delete[] _pieces[y];
+        delete[] _pieces;
+    }
+
+    _width = rhs._width;
+    _height = rhs._height;
+    _pieces = rhs._pieces;
+    rhs._pieces = nullptr;
+
+	return *this;
+}
+
+Board::Board() :
+    Board(BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT)
+{
+    // nothing
+}
+
+Board::Board(Coord width, Coord height) {
+    _width = width;
+    _height = height;
+	_pieces = new Piece*[_height];
+	for (Coord y = 0; y < _height; ++y) {
+		_pieces[y] = new Piece[_width];
+
+		for (Coord x = 0; x < _width; ++x) {
+			_pieces[y][x] = Piece::NONE;
+		}
+	}
+}
+
+Board::Board(const Piece *pieces, int flags) :
+    Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
+{
+    // nothing
+}
+
+Board::Board(const Piece **pieces, int flags) :
+    Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
+{
+    // nothing
+}
+
+Board::Board(const Piece *pieces, Coord width, Coord height, int flags) {
+    _width = width;
+    _height = height;
+	_pieces = new Piece*[_height];
+	for (Coord y = 0; y < _height; ++y) {
+		_pieces[y] = new Piece[_width];
+
+		for (Coord x = 0; x < _width; ++x) {
+            Coord xx = flags & FLIP_X ? _width - x - 1: x;
+            Coord yy = flags & FLIP_Y ? _height - y - 1: y;
+            bool flip = flags & COLUMN_MAJOR;
+			(flip ? _pieces[xx][yy] : _pieces[yy][xx]) = *(pieces++);
+		}
+	}
+}
+
+Board::Board(const Piece **pieces, Coord width, Coord height, int flags) {
+    _width = width;
+    _height = height;
+	_pieces = new Piece*[_height];
+	for (Coord y = 0; y < _height; ++y) {
+		_pieces[y] = new Piece[_width];
+
+		for (Coord x = 0; x < _width; ++x) {
+            Coord xx = flags & FLIP_X ? _width - x - 1: x;
+            Coord yy = flags & FLIP_Y ? _height - y - 1: y;
+            bool flip = flags & COLUMN_MAJOR;
+			(flip ? _pieces[xx][yy] : _pieces[yy][xx]) = pieces[y][x];
+		}
+	}
+}
+
+Board::Board(const Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT]) :
+	Board(&pieces[0][0], BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT)
+{
+	// nothing
+}
+
+// ACCESS
+
+Coord Board::width() const {
 	return _width;
 }
 
-int8 Board::height() const {
+Coord Board::height() const {
 	return _height;
 }
 
@@ -132,25 +162,27 @@ Piece &Board::piece(Tile tile) {
 	return _pieces[tile[1]][tile[0]];
 }
 
+// OPERATORS
+
 Piece Board::operator[](Tile tile) const {
-	return _pieces[tile[1]][tile[0]];
+	return piece(tile);
 }
 
 Piece &Board::operator[](Tile tile) {
-	return _pieces[tile[1]][tile[0]];
+	return piece(tile);
 }
 
-bool Board::operator==(const Board &other) const {
-	if (this == &other) return true; // self-comparison
+bool Board::operator == (const Board &rhs) const {
+	if (this == &rhs) return true; // self-comparison
 
 	// handle boards of different sizes
-	if (_width != other._width) return false;
-	if (_height != other._height) return false;
+	if (_width != rhs._width) return false;
+	if (_height != rhs._height) return false;
 
 	// compare per piece
-	for (int y = 0; y < _height; ++y) {
-		for (int x = 0; x < _width; ++x) {
-			if (this->_pieces[y][x] != other._pieces[y][x])
+	for (Coord y = 0; y < _height; ++y) {
+		for (Coord x = 0; x < _width; ++x) {
+			if (_pieces[y][x] != rhs._pieces[y][x])
 				return false;
 		}
 	}
@@ -158,8 +190,8 @@ bool Board::operator==(const Board &other) const {
 	return true;
 }
 
-bool Board::operator!=(const Board &other) const {
-	return !operator==(other);
+bool Board::operator != (const Board &rhs) const {
+	return !operator == (rhs);
 }
 
 void Board::removePiece(Tile tile) {
@@ -186,7 +218,7 @@ bool Board::isInBound(Tile tile) const {
 // ================================================================
 
 Board Board::factoryStandard() {
-	
+
 	static const Piece K = Piece{PLAYER_WHITE, TYPE_KING};
 	static const Piece Q = Piece{PLAYER_WHITE, TYPE_QUEEN};
 	static const Piece R = Piece{PLAYER_WHITE, TYPE_ROOK};
@@ -202,7 +234,7 @@ Board Board::factoryStandard() {
 	static const Piece p = Piece{PLAYER_BLACK, TYPE_PAWN};
 
 	static const Piece _ = Piece::NONE;
-	
+
 	Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
 		   /* ******************************** */
 		   /*   *     A B C D E F G H      *   */
@@ -237,4 +269,4 @@ Board Board::factoryEmpty() {
 	return Board(pieces);
 }
 
-const Tile Board::INVALID_TILE = Tile((int8)-1, (int8)-1);
+const Tile Board::INVALID_TILE = Tile(-1, -1);

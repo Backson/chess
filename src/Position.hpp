@@ -4,52 +4,34 @@
 #include "Action.hpp"
 #include "Board.hpp"
 
-enum GameState {
-	STATE_START,
-	STATE_WHITE_TURN,
-	STATE_BLACK_TURN,
-	STATE_WHITE_WIN,
-	STATE_BLACK_WIN,
-	STATE_DRAW,
-};
-
-class Position {
+class Position :
+    public Board
+{
 public:
 	// LIFECYCLE
 	Position();
-	Position(const Position& other);
-	Position& operator=(const Position& other);
-
-	Position(const Board& board, GameState game_state, int en_passant_chance_file = -1);
+	Position(Coord width, Coord height);
+	Position(const Board &, Player);
 
 	// OPERATORS
-	bool operator==(const Position& other) const;
-	bool operator!=(const Position& other) const;
+	bool operator == (const Position &) const;
+	bool operator != (const Position &) const;
 
 	// ACCESS
-	const Board& board() const;
-	Board& board();
-	GameState game_state() const;
-	bool is_playing() const;
 	Player active_player() const;
-	int half_turn_counter() const;
-
-	int8 en_passant_chance_file() const;
-	bool can_castle(CastlingType type, Player player) const;
+	Player &active_player();
+	Coord en_passant_file() const;
+	Coord &en_passant_file();
+	bool can_castle(Player, CastlingType) const;
+	bool &can_castle(Player, CastlingType);
 
 	// OPERATIONS
-	void start();
-	void action(const Action& action);
+	void action(const Action &action);
 
 private:
-	Board _board;
-	GameState _game_state;
-
-	int8 _en_passant_chance_file;
-	bool _castling_chances[2][2]; // ...[player][castling_type]
-
-    /// how many half turns without a capture or pawn move
-	int _half_turn_counter;
+	Player _active_player;
+	Coord _en_passant_file;
+	bool _can_castle[2][2]; // ...[player][castling_type]
 };
 
 #endif // POSITION_HPP

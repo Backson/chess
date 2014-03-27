@@ -27,9 +27,9 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 	_decoration = border_size > 0.0;
 	_x = 0.0;
 	_y = 0.0;
-	_position = Position(Board(board_width, board_height), STATE_WHITE_TURN);
-	_selection = Tile((int8)-1, (int8)-1);
-	_cursor = Tile((int8)-1, (int8)-1);
+	_position = Position(board_width, board_height);
+	_selection = Tile(-1, -1);
+	_cursor = Tile(-1, -1);
 	_buffer = al_create_bitmap(getPanelWidthPixels(), getPanelHeightPixels());
 	al_set_target_bitmap(_buffer);
 	drawPanel(0.0, 0.0, _position, _selection);
@@ -69,7 +69,7 @@ void View::updateBuffer(const Position &position, Tile selection) {
                 redraw = true;
 			if (_cursor != algebraic && cursor == algebraic)
                 redraw = true;
-            if (_position.board()[algebraic] != position.board()[algebraic])
+            if (_position[algebraic] != position[algebraic])
                 redraw = true;
 
             if (!redraw)
@@ -80,7 +80,7 @@ void View::updateBuffer(const Position &position, Tile selection) {
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
 			float piece_x = _border_size + displayed[0] * getTileSizePixels();
 			float piece_y = _border_size + displayed[1] * getTileSizePixels();
-			const Piece& piece = position.board()[algebraic];
+			const Piece& piece = position[algebraic];
 			TileColor tile_color = (xx + yy) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
 
 			drawPiece(piece_x, piece_y, piece, tile_color);
@@ -89,8 +89,8 @@ void View::updateBuffer(const Position &position, Tile selection) {
 				drawSelection(piece_x, piece_y);
 			}
 			if (algebraic == cursor) {
-				bool has_sel = position.board().isInBound(selection);
-				bool owns_piece = position.board()[cursor].player ==  position.active_player();
+				bool has_sel = position.isInBound(selection);
+				bool owns_piece = position[cursor].player ==  position.active_player();
 				if(has_sel || owns_piece)
 					drawCursor(piece_x, piece_y);
 			}
@@ -141,19 +141,18 @@ void View::drawBorderDecoration(float x, float y) {
 }
 
 void View::drawBoard(float x, float y, const Position &position, Tile selection) {
-	const Board &board = position.board();
 	ALLEGRO_MOUSE_STATE mouse;
 	al_get_mouse_state(&mouse);
 	Tile cursor = getTileAt(mouse.x, mouse.y);
 
-	for (int8 yy = 0; yy < board.height(); ++yy)
-		for (int8 xx = 0; xx < board.width(); ++xx)
+	for (int8 yy = 0; yy < position.height(); ++yy)
+		for (int8 xx = 0; xx < position.width(); ++xx)
 		{
 			Tile algebraic = Tile(xx, yy);
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
 			float piece_x = x + displayed[0] * getTileSizePixels();
 			float piece_y = y + displayed[1] * getTileSizePixels();
-			const Piece& piece = board[algebraic];
+			const Piece& piece = position[algebraic];
 			TileColor tile_color = (xx + yy) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
 			drawPiece(piece_x, piece_y, piece, tile_color);
 
@@ -161,8 +160,8 @@ void View::drawBoard(float x, float y, const Position &position, Tile selection)
 				drawSelection(piece_x, piece_y);
 			}
 			if (algebraic == cursor) {
-				bool has_sel = board.isInBound(selection);
-				bool owns_piece = board[cursor].player ==  position.active_player();
+				bool has_sel = position.isInBound(selection);
+				bool owns_piece = position[cursor].player ==  position.active_player();
 				if(has_sel || owns_piece)
 					drawCursor(piece_x, piece_y);
 			}

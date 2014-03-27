@@ -9,7 +9,7 @@ bool operator == (Piece lhs, Piece rhs) {
 }
 
 bool operator != (Piece lhs, Piece rhs) {
-	return !operator==(lhs, rhs);
+	return !operator == (lhs, rhs);
 }
 
 const Piece Piece::NONE = Piece{PLAYER_NONE, TYPE_NONE};

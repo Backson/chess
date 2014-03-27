@@ -69,9 +69,8 @@ void initialize(int argc, char** argv, ProgramContext *pc)
     // init game model
     {
         pc->position = new Position();
-        const Board &board = pc->position->board();
-        auto w = board.width();
-        auto h = board.height();
+        auto w = pc->position->width();
+        auto h = pc->position->height();
         pc->view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
     }
 
@@ -151,15 +150,20 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 
+    const Board DEFAULT_BOARD = Board::factoryStandard();
+    const Position DEFAULT_POSITION = Position(DEFAULT_BOARD, PLAYER_WHITE);
+    Position &position = *pc.position;
+    position = DEFAULT_POSITION;
+
     al_start_timer(pc.timer);
-	pc.position->start();
+
 
 	bool shutdown = false;
 	int fps_counter = 0;
 	int fps = 0;
 	int64 us_counter = 0;
 	int64 new_us_counter;
-	Tile selection = Tile((int8)-1, (int8)-1);
+	Tile selection = Tile(-1, -1);
 	while (true) {
         new_us_counter = US_PER_TICK * al_get_timer_count(pc.timer);
 
@@ -177,8 +181,7 @@ int main(int argc, char** argv)
 				if (key == ALLEGRO_KEY_ESCAPE) {
 					shutdown = true;
 				} else if (key == ALLEGRO_KEY_R) {
-					*pc.position = Position();
-					pc.position->start();
+					position = DEFAULT_POSITION;
 				} else if (key == ALLEGRO_KEY_O) {
 					float w = pc.view->getBoardWidth();
 					float h = pc.view->getBoardHeight();
@@ -198,24 +201,23 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
 			    ALLEGRO_MOUSE_STATE mouse;
 			    al_get_mouse_state(&mouse);
-				const Board &board = pc.position->board();
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
-				Player active_player = pc.position->active_player();
+				Player active_player = position.active_player();
 				if (ev.mouse.button == 1) {
                     // click outside the board
-					if (!board.isInBound(tile)) {
-						selection = board.INVALID_TILE;
+					if (!position.isInBound(tile)) {
+						selection = position.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 
 					// clicked already selected piece
 					if (tile == selection) {
-						selection = board.INVALID_TILE;
+						selection = position.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 
                     // clicked another self owned piece
-					if (board[tile].player ==  active_player) {
+					if (position[tile].player ==  active_player) {
 						selection = tile;
 						goto NEXT_EVENT;
 					}
@@ -233,7 +235,7 @@ int main(int argc, char** argv)
                             printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
                             printf(" id:%d", action.type);
                             printf(" (promote to %d)\n", action.promotion);
-                            selection = board.INVALID_TILE;
+                            selection = position.INVALID_TILE;
                             goto NEXT_EVENT;
                         }
                     }
