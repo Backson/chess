@@ -10,9 +10,10 @@ Board::~Board() {
     }
 }
 
-Board::Board(const Board &other) {
-    _width = other._width;
-    _height = other._height;
+Board::Board(const Board &other) :
+    _width(other._width),
+    _height(other._height)
+{
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
@@ -23,10 +24,11 @@ Board::Board(const Board &other) {
 	}
 }
 
-Board::Board(Board &&other) {
-    _width = other._width;
-    _height = other._height;
-	_pieces = other._pieces;
+Board::Board(Board &&other) :
+    _width(other._width),
+    _height(other._height),
+    _pieces(other._pieces)
+{
 	other._pieces = nullptr;
 }
 
@@ -81,9 +83,10 @@ Board::Board() :
     // nothing
 }
 
-Board::Board(Coord width, Coord height) {
-    _width = width;
-    _height = height;
+Board::Board(Coord width, Coord height) :
+    _width(width),
+    _height(height)
+{
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
@@ -106,9 +109,10 @@ Board::Board(const Piece **pieces, int flags) :
     // nothing
 }
 
-Board::Board(const Piece *pieces, Coord width, Coord height, int flags) {
-    _width = width;
-    _height = height;
+Board::Board(const Piece *pieces, Coord width, Coord height, int flags) :
+    _width(width),
+    _height(height)
+{
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
@@ -122,9 +126,10 @@ Board::Board(const Piece *pieces, Coord width, Coord height, int flags) {
 	}
 }
 
-Board::Board(const Piece **pieces, Coord width, Coord height, int flags) {
-    _width = width;
-    _height = height;
+Board::Board(const Piece **pieces, Coord width, Coord height, int flags) :
+    _width(width),
+    _height(height)
+{
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];

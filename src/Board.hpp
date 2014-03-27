@@ -65,8 +65,9 @@ public:
 	static const Tile INVALID_TILE;
 
 private:
-	Coord _width, _height;
-	Piece** _pieces;
+	Coord _width = BOARD_WIDTH_DEFAULT;
+	Coord _height = BOARD_HEIGHT_DEFAULT;
+	Piece** _pieces = nullptr;
 };
 
 #endif // BOARD_HPP

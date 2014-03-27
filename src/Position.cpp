@@ -7,37 +7,11 @@
 
 // LIFECYCLE
 
-Position::Position() :
-    Board()
-{
-    _active_player = PLAYER_WHITE;
-	_en_passant_file = -1;
-	_can_castle[0][0] = true;
-	_can_castle[0][1] = true;
-	_can_castle[1][0] = true;
-	_can_castle[1][1] = true;
-}
-
-Position::Position(Coord width, Coord height) :
-    Board(width, height)
-{
-    _active_player = PLAYER_NONE;
-	_en_passant_file = -1;
-	_can_castle[0][0] = false;
-	_can_castle[0][1] = false;
-	_can_castle[1][0] = false;
-	_can_castle[1][1] = false;
-}
-
 Position::Position(const Board &board, Player active_player) :
-	Board(board)
+	Board(board),
+	_active_player(active_player)
 {
-    _active_player = active_player;
-    _en_passant_file = -1;
-	_can_castle[0][0] = false;
-	_can_castle[0][1] = false;
-	_can_castle[1][0] = false;
-	_can_castle[1][1] = false;
+    // nothing
 }
 
 // OPERATORS

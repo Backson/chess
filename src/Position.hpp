@@ -9,8 +9,8 @@ class Position :
 {
 public:
 	// LIFECYCLE
-	Position();
-	Position(Coord width, Coord height);
+	using Board::Board;
+	Position() = default;
 	Position(const Board &, Player);
 
 	// OPERATORS
@@ -29,9 +29,10 @@ public:
 	void action(const Action &action);
 
 private:
-	Player _active_player;
-	Coord _en_passant_file;
-	bool _can_castle[2][2]; // ...[player][castling_type]
+	Player _active_player = PLAYER_NONE;
+	Coord _en_passant_file = -1;
+	// _can_castle[player][castling_type]
+	bool _can_castle[2][2] = {{false, false}, {false, false}};
 };
 
 #endif // POSITION_HPP
