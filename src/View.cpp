@@ -27,6 +27,7 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 	_decoration = border_size > 0.0;
 	_x = 0.0;
 	_y = 0.0;
+	_last_orientation = WHITE_AT_THE_BOTTOM;
 	_position = Position(board_width, board_height);
 	_selection = Tile(-1, -1);
 	_cursor = Tile(-1, -1);
@@ -47,33 +48,35 @@ void View::draw(float x, float y, const Position &position, Tile selection) {
 }
 
 void View::updateBuffer(const Position &position, Tile selection) {
-    al_set_target_bitmap(_buffer);
+	al_set_target_bitmap(_buffer);
 
-    ALLEGRO_MOUSE_STATE mouse;
-    al_get_mouse_state(&mouse);
-    Tile cursor = getTileAt(mouse.x, mouse.y);
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+	Tile cursor = getTileAt(mouse.x, mouse.y);
 
-    int counter = 0;
+	int counter = 0;
 
 	for (int8 yy = 0; yy < _board_height; ++yy)
 		for (int8 xx = 0; xx < _board_width; ++xx)
 		{
 			Tile algebraic = Tile(xx, yy);
 
-            bool redraw = false;
+			bool redraw = false;
 			if (_selection == algebraic && selection != algebraic)
-                redraw = true;
-			if (_selection != algebraic && selection == algebraic)
-                redraw = true;
-			if (_cursor == algebraic && cursor != algebraic)
-                redraw = true;
-			if (_cursor != algebraic && cursor == algebraic)
-                redraw = true;
-            if (_position[algebraic] != position[algebraic])
-                redraw = true;
+				redraw = true;
+			else if (_selection != algebraic && selection == algebraic)
+				redraw = true;
+			else if (_cursor == algebraic && cursor != algebraic)
+				redraw = true;
+			else if (_cursor != algebraic && cursor == algebraic)
+				redraw = true;
+			else if (_position[algebraic] != position[algebraic])
+				redraw = true;
+			else if(_last_orientation != _orientation)
+				redraw = true;
 
-            if (!redraw)
-                continue;
+			if (!redraw)
+				continue;
 
             ++counter;
 
@@ -96,9 +99,10 @@ void View::updateBuffer(const Position &position, Tile selection) {
 			}
 		}
 
-    _position = position;
-    _selection = selection;
-    _cursor = cursor;
+	_last_orientation = _orientation;
+	_position = position;
+	_selection = selection;
+	_cursor = cursor;
 }
 
 void View::drawPanel(float x, float y, const Position &position, Tile selection) {
@@ -234,6 +238,10 @@ int View::getBoardHeight() const {
 
 Orientation View::getOrientation() const {
 	return _orientation;
+}
+
+void View::setOrientation(Orientation orientation) {
+	_orientation = orientation;
 }
 
 Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {

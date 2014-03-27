@@ -183,13 +183,9 @@ int main(int argc, char** argv)
 				} else if (key == ALLEGRO_KEY_R) {
 					position = DEFAULT_POSITION;
 				} else if (key == ALLEGRO_KEY_O) {
-					float w = pc.view->getBoardWidth();
-					float h = pc.view->getBoardHeight();
 					Orientation orient = pc.view->getOrientation();
-					float b = pc.view->getBorderSizePixels();
 					orient = (Orientation)(((int)orient + 1) % 4);
-					delete pc.view;
-					pc.view = new View(w, h, orient, b);
+					pc.view->setOrientation(orient);
 				}
 				break;
 			}

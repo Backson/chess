@@ -55,6 +55,7 @@ public:
 	int getBoardHeight() const;
 
 	Orientation getOrientation() const;
+	void setOrientation(Orientation orientation);
 
 	Tile convertAlgebraicToDisplayed(Tile) const;
 	Tile convertDisplayedToAlgebraic(Tile) const;
@@ -67,15 +68,17 @@ public:
 private:
 	/// size of the board in tiles
 	const int _board_width, _board_height;
+	/// in which orientation the last frame was drawn
+	Orientation _last_orientation;
 	/// in which orientation to draw
-	const Orientation _orientation;
+	Orientation _orientation;
 	/// size of the border in pixels
 	const float _border_size;
 
 	/// true, if numbers and letters should be drawn next to the board
 	bool _decoration;
 
-	/// where was the board las drawn? (top left corner, border inclusive)
+	/// where was the board last drawn? (top left corner, border inclusive)
 	int _x, _y;
 	/// The position that was last drawn
 	Position _position;
