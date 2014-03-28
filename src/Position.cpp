@@ -105,7 +105,7 @@ void Position::action(const Action &a) {
 		Tile right = a.dst + Tile(1, 0);
 		Piece p = Piece{opponent, TYPE_PAWN};
 		bool pawnLeft = isInBound(left) && piece(left) == p;
-		bool pawnRight = isInBound(right) && piece(left) == p;
+		bool pawnRight = isInBound(right) && piece(right) == p;
 		if(pawnLeft || pawnRight) {
 			_en_passant_file = a.dst[0];
 		}

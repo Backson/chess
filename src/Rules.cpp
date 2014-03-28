@@ -120,7 +120,7 @@ bool Rules::isEnPassantLegal(const Position &position, Action a) {
 
 	// there needs to be an enemy pawn that has passed the current pawn
 	Tile opponent_pawn = Tile(a.dst[0], a.src[1]);
-	Player opponent = a.player == PLAYER_WHITE ? PLAYER_BLACK : PLAYER_WHITE;
+	Player opponent = static_cast<Player>(1 - a.player);
 	if (position[opponent_pawn] != Piece{opponent, TYPE_PAWN})
 		return false;
 
