@@ -4,9 +4,11 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_color.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 #include "View.hpp"
-#include "Board.hpp"
+#include "Game.hpp"
 #include "Action.hpp"
 #include "Piece.hpp"
 #include "Rules.hpp"
@@ -18,14 +20,16 @@ struct ProgramContext {
 	ALLEGRO_DISPLAY *display;
 	ALLEGRO_EVENT_QUEUE *event_queue;
 	ALLEGRO_TIMER *timer;
+	ALLEGRO_FONT *font;
 
-	Position *position;
+	Game *game;
+	Game::HistoryConstIter iter;
 	View *view;
 
 	bool panic;
 };
 
-void initialize(int argc, char** argv, ProgramContext *pc)
+void initialize(int argc, char **argv, ProgramContext *pc)
 {
 	// init allegro
 	if (!al_init()) {
@@ -54,6 +58,19 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		return;
 	}
 
+	al_init_font_addon();
+	if (!al_init_ttf_addon()) {
+		fprintf(stderr, "failed to initialize ttf font addon!\n");
+		pc->panic = true;
+		return;
+	}
+
+	pc->font = al_load_font("Bevan.ttf", -32, ALLEGRO_TTF_MONOCHROME);
+	if (!pc->font) {
+		pc->panic = true;
+		return;
+	}
+
 	pc->timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
 	if (!pc->timer) {
 		pc->panic = true;
@@ -68,9 +85,11 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 
 	// init game model
 	{
-		pc->position = new Position();
-		auto w = pc->position->width();
-		auto h = pc->position->height();
+		Situation situation(Position::factoryStandard(), PLAYER_WHITE);
+		pc->game = new Game(situation);
+		const Situation &current = pc->game->current_situation();
+		auto w = current.width();
+		auto h = current.height();
 		pc->view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
 	}
 
@@ -79,7 +98,7 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
 		int w = pc->view->getPanelWidthPixels();
 		int h = pc->view->getPanelHeightPixels();
-		pc->display = al_create_display(w, h);
+		pc->display = al_create_display(w + 200, h + 50);
 		if (!pc->display) {
 			fprintf(stderr, "failed to create display!\n");
 			pc->panic = true;
@@ -106,26 +125,30 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 }
 
 void finilize(ProgramContext *pc) {
+	if (pc->font) {
+		al_destroy_font(pc->font);
+		pc->font = nullptr;
+	}
 	if (pc->view) {
 		delete pc->view;
-		pc->view = NULL;
+		pc->view = nullptr;
 	}
-	if (pc->position) {
-		delete pc->position;
-		pc->position = NULL;
+	if (pc->game) {
+		delete pc->game;
+		pc->game = nullptr;
 	}
 	View::deinitialize();
 	if (pc->timer) {
 		al_destroy_timer(pc->timer);
-		pc->timer = NULL;
+		pc->timer = nullptr;
 	}
 	if (pc->display) {
 		al_destroy_display(pc->display);
-		pc->display = NULL;
+		pc->display = nullptr;
 	}
 	if (pc->event_queue) {
 		al_destroy_event_queue(pc->event_queue);
-		pc->event_queue = NULL;
+		pc->event_queue = nullptr;
 	}
 	al_uninstall_system();
 }
@@ -135,11 +158,12 @@ int main(int argc, char** argv)
 	//printTypeInformation();
 
 	ProgramContext pc;
-	pc.display = NULL;
-	pc.event_queue = NULL;
-	pc.timer = NULL;
-	pc.position = NULL;
-	pc.view = NULL;
+	pc.display = nullptr;
+	pc.event_queue = nullptr;
+	pc.timer = nullptr;
+	pc.game = nullptr;
+	pc.view = nullptr;
+	pc.font = nullptr;
 	pc.panic = false;
 
 	initialize(argc, argv, &pc);
@@ -151,12 +175,12 @@ int main(int argc, char** argv)
 	}
 
 	const Board DEFAULT_BOARD = Board::factoryStandard();
-	const Position DEFAULT_POSITION = Position(DEFAULT_BOARD, PLAYER_WHITE);
-	Position &position = *pc.position;
-	position = DEFAULT_POSITION;
+	const Situation DEFAULT_SITUATION(DEFAULT_BOARD, PLAYER_WHITE);
+	Game &game = *pc.game;
+	game.reset(DEFAULT_SITUATION);
+	pc.iter = --game.history().end();
 
 	al_start_timer(pc.timer);
-
 
 	bool shutdown = false;
 	int fps_counter = 0;
@@ -181,11 +205,18 @@ int main(int argc, char** argv)
 				if (key == ALLEGRO_KEY_ESCAPE) {
 					shutdown = true;
 				} else if (key == ALLEGRO_KEY_R) {
-					position = DEFAULT_POSITION;
+					game.reset(DEFAULT_SITUATION);
+					pc.iter = --game.history().end();
 				} else if (key == ALLEGRO_KEY_O) {
 					Orientation orient = pc.view->getOrientation();
 					orient = (Orientation)(((int)orient + 1) % 4);
 					pc.view->setOrientation(orient);
+				} else if (key == ALLEGRO_KEY_B) {
+					if (pc.iter->index > 0)
+						--pc.iter;
+				} else if (key == ALLEGRO_KEY_N) {
+					if (pc.iter->index < (int)pc.game->history().size() - 1)
+						++pc.iter;
 				}
 				break;
 			}
@@ -195,43 +226,49 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
+				const Situation &situation = pc.iter->situation;
 				ALLEGRO_MOUSE_STATE mouse;
 				al_get_mouse_state(&mouse);
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
-				Player active_player = position.active_player();
+				Player active_player = situation.active_player();
 				if (ev.mouse.button == 1) {
 					// click outside the board
-					if (!position.isInBound(tile)) {
-						selection = position.INVALID_TILE;
+					if (!situation.isInBound(tile)) {
+						selection = situation.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 
 					// clicked already selected piece
 					if (tile == selection) {
-						selection = position.INVALID_TILE;
+						selection = situation.INVALID_TILE;
 						goto NEXT_EVENT;
 					}
 
 					// clicked another self owned piece
-					if (position[tile].player ==  active_player) {
+					if (situation[tile].player ==  active_player) {
 						selection = tile;
 						goto NEXT_EVENT;
 					}
 
 					// tried to make a move
 					{
+						game.seek(pc.iter->index);
+
 						Rules rules;
 						Action action;
-						action = rules.examineMove(*pc.position, selection, tile);
-						bool is_legal = rules.isActionLegal(*pc.position, action);
+						action = rules.examineMove(situation, selection, tile);
+						bool is_legal = rules.isActionLegal(situation, action);
 						if (is_legal) {
-							pc.position->action(action);
+							game.action(action);
 							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
 							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
 							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
 							printf(" id:%d", action.type);
 							printf(" (promote to %d)\n", action.promotion);
-							selection = position.INVALID_TILE;
+							selection = situation.INVALID_TILE;
+
+							pc.iter = --game.history().end();
+
 							goto NEXT_EVENT;
 						}
 					}
@@ -280,7 +317,17 @@ int main(int argc, char** argv)
 		us_counter = new_us_counter;
 
 		al_set_target_backbuffer(al_get_current_display());
-		pc.view->draw(0.0, 0.0, *pc.position, selection);
+		pc.view->draw(0.0, 0.0, pc.iter->situation, selection);
+		auto bg = al_color_name("black");
+		auto fg = al_color_name("white");
+		al_draw_filled_rectangle(440, 0, 640, 490, bg);
+		int lineno = 0;
+		int file = game.current_situation().en_passant_file();
+		al_draw_textf(pc.font, fg, 460, 20 + lineno++ * 32, 0, "en passant:\n");
+		al_draw_textf(pc.font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", file);
+		al_draw_textf(pc.font, fg, 460, 20 + lineno++ * 32, 0, "\n");
+		al_draw_textf(pc.font, fg, 460, 20 + lineno++ * 32, 0, "turn:\n");
+		al_draw_textf(pc.font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", pc.iter->index);
 		al_flip_display();
 		++fps_counter;
 	} // main loop

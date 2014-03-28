@@ -18,8 +18,11 @@ struct HistoryEntry {
 
 class Game {
 public:
+
+	typedef std::list<HistoryEntry>::iterator HistoryIter;
+	typedef std::list<HistoryEntry>::const_iterator HistoryConstIter;
+
 	// LIFECYYCLE
-	~Game() = default;
 	Game(const Game &) = delete;
 	Game &operator = (const Game &) = delete;
 	Game();
@@ -30,8 +33,15 @@ public:
 	int position_repetition_counter(const Position &) const;
 	int position_repetition_counter() const;
 
+	const std::list<HistoryEntry> &history() const;
+
 	// OPERATION
-	void action(const Action& action);
+	void action(const Action &action);
+	void seek(int number);
+	void pop();
+
+	void reset();
+	void reset(const Situation &);
 
 private:
 	/// contains all past positions and corresponding moves

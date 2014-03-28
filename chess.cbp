@@ -50,6 +50,9 @@
 			<Add option="-lallegro_color-static" />
 			<Add option="-lallegro_image-static" />
 			<Add option="-lallegro_primitives-static" />
+			<Add option="-lallegro_font-static" />
+			<Add option="-lallegro_ttf-static" />
+			<Add option="-lfreetype" />
 			<Add option="-lgdiplus" />
 			<Add option="-luuid" />
 			<Add option="-lkernel32" />
