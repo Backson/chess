@@ -5,13 +5,19 @@
 #include "Board.hpp"
 
 class Position :
-    public Board
+	public Board
 {
 public:
+	enum CastlingInit {
+		CASTLING_GUESS,
+		CASTLING_ALL_FALSE,
+		CASTLING_ALL_TRUE,
+	};
+
 	// LIFECYCLE
 	using Board::Board;
 	Position() = default;
-	Position(const Board &, Player);
+	Position(const Board &, Player, CastlingInit ci = CASTLING_GUESS);
 
 	// OPERATORS
 	bool operator == (const Position &) const;

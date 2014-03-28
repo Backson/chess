@@ -22,7 +22,7 @@ enum Type : int8 {
 struct Piece {
 	Player player;
 	Type type;
-	
+
 	static const Piece NONE;
 };
 

@@ -16,12 +16,12 @@ typedef ltd::vec<Coord, 2> Tile;
 class Board {
 public:
 
-    static const int ROW_MAJOR    = 0; // pseudo flag, gets ignored
-    static const int COLUMN_MAJOR = 1;
-    static const int FLIP_X       = 2;
-    static const int FLIP_Y       = 4;
+	static const int ROW_MAJOR    = 0; // pseudo flag, gets ignored
+	static const int COLUMN_MAJOR = 1;
+	static const int FLIP_X       = 2;
+	static const int FLIP_Y       = 4;
 
-    // LIFECYCLE
+	// LIFECYCLE
 	~Board();
 	Board(const Board &);
 	Board(Board &&);
@@ -35,7 +35,7 @@ public:
 	Board(const Piece **, Coord width, Coord height, int flags = 0);
 	Board(const Piece[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT]);
 
-    // ACCESS
+	// ACCESS
 	Coord width() const;
 	Coord height() const;
 
@@ -44,20 +44,20 @@ public:
 
 	bool isInBound(Tile tile) const;
 
-    // OPERATORS
+	// OPERATORS
 	Piece operator [] (Tile tile) const;
 	Piece &operator [] (Tile tile);
 
 	bool operator == (const Board &rhs) const;
 	bool operator != (const Board &rhs) const;
 
-    // OPERATIONS
+	// OPERATIONS
 	void resize();
 
 	void removePiece(Tile tile);
 	void movePiece(Tile src, Tile dst);
 
-    // MISC
+	// MISC
 
 	static Board factoryStandard();
 	static Board factoryEmpty();

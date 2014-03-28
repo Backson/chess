@@ -41,10 +41,10 @@ View::~View() {
 }
 
 void View::draw(float x, float y, const Position &position, Tile selection) {
-    ALLEGRO_BITMAP *target = al_get_target_bitmap();
-    updateBuffer(position, selection);
-    al_set_target_bitmap(target);
-    al_draw_bitmap(_buffer, x, y, 0);
+	ALLEGRO_BITMAP *target = al_get_target_bitmap();
+	updateBuffer(position, selection);
+	al_set_target_bitmap(target);
+	al_draw_bitmap(_buffer, x, y, 0);
 }
 
 void View::updateBuffer(const Position &position, Tile selection) {
@@ -78,7 +78,7 @@ void View::updateBuffer(const Position &position, Tile selection) {
 			if (!redraw)
 				continue;
 
-            ++counter;
+			++counter;
 
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
 			float piece_x = _border_size + displayed[0] * getTileSizePixels();

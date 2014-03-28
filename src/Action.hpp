@@ -13,32 +13,31 @@ enum CastlingType : int8 {
 
 /** All possible actions that a player can take during a game of chess.
  */
-enum ActionType : int8 {
+enum MoveType : int8 {
 	DO_NOTHING,
-
 	MOVE_PIECE,
 	CAPTURE_PIECE,
 	CASTLING,
 	EN_PASSANT,
-
-	RESIGN,
-	ACCEPT_REMIS,
 };
 
 enum AnnouncementType : int8 {
+	NO_ANNOUNCEMENT,
+	RESIGN,
 	OFFER_REMIS,
+	ACCEPT_REMIS,
 	CLAIM_POSITION_REPETITION,
 	CLAIM_FIFTY_MOVES_RULE,
 };
 
-/** Holds all the information about one legal action that a player can take.
+/** Holds all the information about one legal move that a player can take.
  */
 struct Action {
 	/** Which player is making the move? */
 	Player player;
 
 	/** What does the player want to do? */
-	ActionType type;
+	MoveType type;
 
 	/** Which tile is the piece on that the player wants to move */
 	Tile src;
@@ -53,7 +52,7 @@ struct Action {
 	AnnouncementType announcement;
 };
 
-bool operator==(const Action &, const Action &);
-bool operator!=(const Action &, const Action &);
+bool operator == (const Action &, const Action &);
+bool operator != (const Action &, const Action &);
 
 #endif // ACTION_HPP

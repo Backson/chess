@@ -1,15 +1,15 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 
-#include "Position.hpp"
+#include "Situation.hpp"
 #include "compare.hpp"
 
 #include <map>
 #include <list>
 
-struct PositionListEntry {
+struct HistoryEntry {
 	/// The current position
-	Position position;
+	Situation situation;
 	/// The action that lead to this position
 	Action action;
 	/// the numerical index of the current position, 0 being the initial pos
@@ -18,21 +18,24 @@ struct PositionListEntry {
 
 class Game {
 public:
-	Game();
-	Game(const Position &);
-	Game(const Game &) = delete;
+	// LIFECYYCLE
 	~Game() = default;
+	Game(const Game &) = delete;
 	Game &operator = (const Game &) = delete;
-	
-	const Position &current_position() const;
+	Game();
+	Game(const Situation &);
+
+	// ACCESS
+	const Situation &current_situation() const;
 	int position_repetition_counter(const Position &) const;
 	int position_repetition_counter() const;
 
+	// OPERATION
 	void action(const Action& action);
-	
+
 private:
 	/// contains all past positions and corresponding moves
-	std::list<PositionListEntry> _history;
+	std::list<HistoryEntry> _history;
 	/// track the number of times each position has occured
 	std::map<Position, int, PositionCompare> _position_repetition;
 };

@@ -54,11 +54,11 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		return;
 	}
 
-    pc->timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
-    if (!pc->timer) {
+	pc->timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
+	if (!pc->timer) {
 		pc->panic = true;
 		return;
-    }
+	}
 
 	if (View::initialize()) {
 		fprintf(stderr, "failed to initialize view!\n");
@@ -66,25 +66,25 @@ void initialize(int argc, char** argv, ProgramContext *pc)
 		return;
 	}
 
-    // init game model
-    {
-        pc->position = new Position();
-        auto w = pc->position->width();
-        auto h = pc->position->height();
-        pc->view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
-    }
+	// init game model
+	{
+		pc->position = new Position();
+		auto w = pc->position->width();
+		auto h = pc->position->height();
+		pc->view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
+	}
 
 	// init display
 	{
-        al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
-        int w = pc->view->getPanelWidthPixels();
-        int h = pc->view->getPanelHeightPixels();
-        pc->display = al_create_display(w, h);
-        if (!pc->display) {
-            fprintf(stderr, "failed to create display!\n");
-            pc->panic = true;
-            return;
-        }
+		al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
+		int w = pc->view->getPanelWidthPixels();
+		int h = pc->view->getPanelHeightPixels();
+		pc->display = al_create_display(w, h);
+		if (!pc->display) {
+			fprintf(stderr, "failed to create display!\n");
+			pc->panic = true;
+			return;
+		}
 	}
 
 	// show systom mouse cursor
@@ -150,12 +150,12 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 
-    const Board DEFAULT_BOARD = Board::factoryStandard();
-    const Position DEFAULT_POSITION = Position(DEFAULT_BOARD, PLAYER_WHITE);
-    Position &position = *pc.position;
-    position = DEFAULT_POSITION;
+	const Board DEFAULT_BOARD = Board::factoryStandard();
+	const Position DEFAULT_POSITION = Position(DEFAULT_BOARD, PLAYER_WHITE);
+	Position &position = *pc.position;
+	position = DEFAULT_POSITION;
 
-    al_start_timer(pc.timer);
+	al_start_timer(pc.timer);
 
 
 	bool shutdown = false;
@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 	int64 new_us_counter;
 	Tile selection = Tile(-1, -1);
 	while (true) {
-        new_us_counter = US_PER_TICK * al_get_timer_count(pc.timer);
+		new_us_counter = US_PER_TICK * al_get_timer_count(pc.timer);
 
 		// fetch all events in the queue and process them in order
 		ALLEGRO_EVENT ev;
@@ -195,12 +195,12 @@ int main(int argc, char** argv)
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 				break;
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP: {
-			    ALLEGRO_MOUSE_STATE mouse;
-			    al_get_mouse_state(&mouse);
+				ALLEGRO_MOUSE_STATE mouse;
+				al_get_mouse_state(&mouse);
 				Tile tile = pc.view->getTileAt(mouse.x, mouse.y);
 				Player active_player = position.active_player();
 				if (ev.mouse.button == 1) {
-                    // click outside the board
+					// click outside the board
 					if (!position.isInBound(tile)) {
 						selection = position.INVALID_TILE;
 						goto NEXT_EVENT;
@@ -212,29 +212,29 @@ int main(int argc, char** argv)
 						goto NEXT_EVENT;
 					}
 
-                    // clicked another self owned piece
+					// clicked another self owned piece
 					if (position[tile].player ==  active_player) {
 						selection = tile;
 						goto NEXT_EVENT;
 					}
 
-                    // tried to make a move
-                    {
-                        Rules rules;
-                        Action action;
-                        action = rules.examineMove(*pc.position, selection, tile);
-                        bool is_legal = rules.isActionLegal(*pc.position, action);
-                        if (is_legal) {
-                            pc.position->action(action);
-                            printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
-                            printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
-                            printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
-                            printf(" id:%d", action.type);
-                            printf(" (promote to %d)\n", action.promotion);
-                            selection = position.INVALID_TILE;
-                            goto NEXT_EVENT;
-                        }
-                    }
+					// tried to make a move
+					{
+						Rules rules;
+						Action action;
+						action = rules.examineMove(*pc.position, selection, tile);
+						bool is_legal = rules.isActionLegal(*pc.position, action);
+						if (is_legal) {
+							pc.position->action(action);
+							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
+							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
+							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
+							printf(" id:%d", action.type);
+							printf(" (promote to %d)\n", action.promotion);
+							selection = position.INVALID_TILE;
+							goto NEXT_EVENT;
+						}
+					}
 				}
 				break;
 			}
@@ -271,13 +271,13 @@ int main(int argc, char** argv)
 		if (shutdown)
 			break;
 
-        // whenever a full second has passed
-        if (new_us_counter / 1000000 > us_counter / 1000000) {
-            fps = fps_counter;
-            fps_counter = 0;
-            printf("fps: %3d\n", fps);
-        }
-        us_counter = new_us_counter;
+		// whenever a full second has passed
+		if (new_us_counter / 1000000 > us_counter / 1000000) {
+			fps = fps_counter;
+			fps_counter = 0;
+			printf("fps: %3d\n", fps);
+		}
+		us_counter = new_us_counter;
 
 		al_set_target_backbuffer(al_get_current_display());
 		pc.view->draw(0.0, 0.0, *pc.position, selection);

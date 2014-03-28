@@ -3,16 +3,16 @@
 // LIFECYCLE
 
 Board::~Board() {
-    if (_pieces) {
-        for (Coord y = 0; y < _height; ++y)
-            delete[] _pieces[y];
-        delete[] _pieces;
-    }
+	if (_pieces) {
+		for (Coord y = 0; y < _height; ++y)
+			delete[] _pieces[y];
+		delete[] _pieces;
+	}
 }
 
 Board::Board(const Board &other) :
-    _width(other._width),
-    _height(other._height)
+	_width(other._width),
+	_height(other._height)
 {
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
@@ -25,9 +25,9 @@ Board::Board(const Board &other) :
 }
 
 Board::Board(Board &&other) :
-    _width(other._width),
-    _height(other._height),
-    _pieces(other._pieces)
+	_width(other._width),
+	_height(other._height),
+	_pieces(other._pieces)
 {
 	other._pieces = nullptr;
 }
@@ -37,11 +37,11 @@ Board &Board::operator = (const Board &rhs) {
 
 	bool must_resize = _width != rhs._width || _height != rhs._height;
 	if (must_resize) {
-	    if (_pieces) {
-            for (Coord y = 0; y < _height; ++y)
-                delete[] _pieces[y];
-            delete[] _pieces;
-	    }
+		if (_pieces) {
+			for (Coord y = 0; y < _height; ++y)
+				delete[] _pieces[y];
+			delete[] _pieces;
+		}
 
 		_width = rhs._width;
 		_height = rhs._height;
@@ -63,29 +63,29 @@ Board &Board::operator = (const Board &rhs) {
 Board &Board::operator = (Board &&rhs) {
 	if (this == &rhs) return *this; // self assignment
 
-    if (_pieces) {
-        for (Coord y = 0; y < _height; ++y)
-            delete[] _pieces[y];
-        delete[] _pieces;
-    }
+	if (_pieces) {
+		for (Coord y = 0; y < _height; ++y)
+			delete[] _pieces[y];
+		delete[] _pieces;
+	}
 
-    _width = rhs._width;
-    _height = rhs._height;
-    _pieces = rhs._pieces;
-    rhs._pieces = nullptr;
+	_width = rhs._width;
+	_height = rhs._height;
+	_pieces = rhs._pieces;
+	rhs._pieces = nullptr;
 
 	return *this;
 }
 
 Board::Board() :
-    Board(BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT)
+	Board(BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT)
 {
-    // nothing
+	// nothing
 }
 
 Board::Board(Coord width, Coord height) :
-    _width(width),
-    _height(height)
+	_width(width),
+	_height(height)
 {
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
@@ -98,46 +98,46 @@ Board::Board(Coord width, Coord height) :
 }
 
 Board::Board(const Piece *pieces, int flags) :
-    Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
+	Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
 {
-    // nothing
+	// nothing
 }
 
 Board::Board(const Piece **pieces, int flags) :
-    Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
+	Board(pieces, BOARD_WIDTH_DEFAULT, BOARD_HEIGHT_DEFAULT, flags)
 {
-    // nothing
+	// nothing
 }
 
 Board::Board(const Piece *pieces, Coord width, Coord height, int flags) :
-    _width(width),
-    _height(height)
+	_width(width),
+	_height(height)
 {
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
 
 		for (Coord x = 0; x < _width; ++x) {
-            Coord xx = flags & FLIP_X ? _width - x - 1: x;
-            Coord yy = flags & FLIP_Y ? _height - y - 1: y;
-            bool flip = flags & COLUMN_MAJOR;
+			Coord xx = flags & FLIP_X ? _width - x - 1: x;
+			Coord yy = flags & FLIP_Y ? _height - y - 1: y;
+			bool flip = flags & COLUMN_MAJOR;
 			(flip ? _pieces[xx][yy] : _pieces[yy][xx]) = *(pieces++);
 		}
 	}
 }
 
 Board::Board(const Piece **pieces, Coord width, Coord height, int flags) :
-    _width(width),
-    _height(height)
+	_width(width),
+	_height(height)
 {
 	_pieces = new Piece*[_height];
 	for (Coord y = 0; y < _height; ++y) {
 		_pieces[y] = new Piece[_width];
 
 		for (Coord x = 0; x < _width; ++x) {
-            Coord xx = flags & FLIP_X ? _width - x - 1: x;
-            Coord yy = flags & FLIP_Y ? _height - y - 1: y;
-            bool flip = flags & COLUMN_MAJOR;
+			Coord xx = flags & FLIP_X ? _width - x - 1: x;
+			Coord yy = flags & FLIP_Y ? _height - y - 1: y;
+			bool flip = flags & COLUMN_MAJOR;
 			(flip ? _pieces[xx][yy] : _pieces[yy][xx]) = pieces[y][x];
 		}
 	}

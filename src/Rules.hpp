@@ -12,7 +12,7 @@ public:
 	/** Tries to guess appropriate flags for a move from src to dest.
 	 * If there is a legal move that involves moving a piece from src to dest,
 	 * than this function will return that move.  If no legal move exists, the
-	 * behaviour is undefined.
+	 * behavior is undefined.
 	 * When a player clicks some tiles on the gui you can use this function
 	 * to guess what the player probably wants and then check whether that
 	 * move is legal afterwards with isMoveLegal.

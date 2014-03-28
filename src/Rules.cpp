@@ -3,41 +3,20 @@
 #include "Position.hpp"
 
 Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
-	Action a;
+	Player player = position.active_player();
+	Tile invalid = position.INVALID_TILE;
 
-	if (!position.isInBound(src)) {
-		a.player = PLAYER_NONE;
-		a.type = DO_NOTHING;
-		return a;
-	}
-	a.player = position[src].player;
-	if (!position.isInBound(dst)) {
-		a.type = DO_NOTHING;
-		return a;
-	}
-
-	a.src = src;
-	a.dst = dst;
-
-	if (position[dst] != Piece::NONE) {
-		a.type = CAPTURE_PIECE;
+	if (!position.isInBound(src) || !position.isInBound(dst)) {
+		return {player, DO_NOTHING, invalid, invalid, TYPE_NONE};
+	} else if (position[dst] != Piece::NONE) {
+		return {player, CAPTURE_PIECE, src, dst, TYPE_NONE};
 	} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
-		a.type = CASTLING;
+		return {player, CASTLING, src, dst, TYPE_NONE};
 	} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
-		a.type = EN_PASSANT;
+		return {player, EN_PASSANT, src, dst, TYPE_NONE};
 	} else {
-		a.type = MOVE_PIECE;
+		return {player, MOVE_PIECE, src, dst, TYPE_NONE};
 	}
-
-	a.promotion = TYPE_NONE;
-	if (position[src].type == TYPE_PAWN) {
-		if (dst[1] == position.height() - 1 || dst[1] == 0) {
-			// TODO let the player choose promotion type himself
-			a.promotion = TYPE_QUEEN;
-		}
-	}
-
-	return a;
 }
 
 bool Rules::isActionLegal(const Position &position, Action a) {

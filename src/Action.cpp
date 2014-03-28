@@ -1,6 +1,6 @@
 #include "Action.hpp"
 
-bool operator==(const Action &lhs, const Action &rhs) {
+bool operator == (const Action &lhs, const Action &rhs) {
 	if (lhs.player != rhs.player)
 		return false;
 	if (lhs.type != rhs.type)
@@ -11,10 +11,13 @@ bool operator==(const Action &lhs, const Action &rhs) {
 		return false;
 	if (lhs.promotion != rhs.promotion)
 		return false;
-	
+	if (lhs.announcement != rhs.announcement)
+		return false;
+
 	return true;
 }
 
-bool operator!=(const Action &lhs, const Action &rhs) {
-	return !operator==(lhs, rhs);
+bool operator != (const Action &lhs, const Action &rhs) {
+	return !operator == (lhs, rhs);
 }
+
