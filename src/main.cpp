@@ -328,7 +328,7 @@ int Main::main(int argc, char** argv)
 		auto fg = al_color_name("white");
 		al_draw_filled_rectangle(440, 0, 640, 490, bg);
 		int lineno = 0;
-		int file = game.current_situation().en_passant_file();
+		int file = _iter->situation.en_passant_file();
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "en passant:\n");
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", file);
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "\n");
