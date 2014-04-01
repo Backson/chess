@@ -30,3 +30,8 @@ bin/
 obj/
 Debug/
 Release/
+
+# project files of some kind
+*.depend
+*.layout
+*.mk
