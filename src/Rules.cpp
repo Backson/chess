@@ -68,6 +68,10 @@ bool Rules::isCastlingLegal(const Position &position, Action a) {
 	if (position[a.src].type != TYPE_KING)
 		return false;
 
+    // checks promotion flag
+    if (a.promotion != TYPE_NONE)
+        return false;
+
 	// which of the two castlings is being performed?
 	Tile d = a.dst - a.src;
 	CastlingType castling_type;
@@ -97,7 +101,7 @@ bool Rules::isCastlingLegal(const Position &position, Action a) {
 		return false;
 
 	// is the square the king passes over currently attacked?
-	Tile step = Tile((int8)(castling_type == KINGSIDE ? +1 : -1), (int8)0);
+	Tile step = Tile(castling_type == KINGSIDE ? +1 : -1, 0);
 	Tile passing_by = a.src + step;
 	if (doesPlayerAttackSquare(position, passing_by, opponent))
 		return false;
@@ -106,6 +110,10 @@ bool Rules::isCastlingLegal(const Position &position, Action a) {
 }
 
 bool Rules::isEnPassantLegal(const Position &position, Action a) {
+    // checks promotion flag
+    if (a.promotion != TYPE_NONE)
+        return false;
+
 	// only pawns can capture en passant
 	if (position[a.src].type != TYPE_PAWN)
 		return false;
@@ -164,6 +172,9 @@ bool Rules::isRegularMoveLegal(const Position &position, Action a) {
 			case TYPE_KNIGHT:
 				break;
 		}
+	} else {
+        if (a.promotion != TYPE_NONE)
+            return false;
 	}
 
 	// check whether the path between src and dest is actually free
@@ -388,4 +399,39 @@ bool Rules::hasLegalMove(const Position &position, Tile src) {
 bool Rules::hasLegalMove(const Position &position, Tile src, Tile dst) {
 	Action action = examineMove(position, src, dst);
 	return isActionLegal(position, action);
+}
+
+std::vector<Action> &Rules::getAllLegalMoves(const Game &game, std::vector<Action> &actions) {
+    const Situation &situation = game.current_situation();
+    Player player = situation.active_player();
+
+	for (Coord y1 = 0; y1 < situation.height(); ++y1)
+    for (Coord x1 = 0; x1 < situation.width(); ++x1)
+    for (Coord y2 = 0; y2 < situation.height(); ++y2)
+    for (Coord x2 = 0; x2 < situation.width(); ++x2){
+        Tile src(x1, y1);
+        Tile dst(x2, y2);
+
+        Action a = examineMove(situation, src, dst);
+        Coord end_row = player == PLAYER_WHITE ? situation.width() : 0;
+        if (situation[a.src].type == TYPE_PAWN && a.dst[1] == end_row) {
+            a.promotion = TYPE_QUEEN;
+            actions.push_back(a);
+            a.promotion = TYPE_ROOK;
+            actions.push_back(a);
+            a.promotion = TYPE_BISHOP;
+            actions.push_back(a);
+            a.promotion = TYPE_KNIGHT;
+            actions.push_back(a);
+        } else {
+            actions.push_back(a);
+        }
+    }
+
+    return actions;
+}
+std::vector<Action> Rules::getAllLegalMoves(const Game &game) {
+    std::vector<Action> actions;
+    getAllLegalMoves(game, actions);
+    return actions;
 }

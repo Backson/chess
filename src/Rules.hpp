@@ -1,7 +1,9 @@
 #ifndef RULES_HPP
 #define RULES_HPP
 
-#include "Position.hpp"
+#include "Game.hpp"
+
+#include <vector>
 
 /** Provides information about what moves are legal.
  *
@@ -27,15 +29,11 @@ public:
 	 */
 	bool isCastlingLegal(const Position &, Action a);
 
-	/*
+	/**
 	 */
 	bool isEnPassantLegal(const Position &, Action a);
 
-	/*
-	 */
-	bool isPromotionLegal(const Position &, Action a);
-
-	/* checks whether a move is legal that is not a castling or en passant.
+	/** checks whether a move is legal that is not a castling or en passant.
 	 */
 	bool isRegularMoveLegal(const Position &, Action a);
 
@@ -77,6 +75,11 @@ public:
 	/** Checks whether a legal move from src to dst exists
 	 */
 	bool hasLegalMove(const Position &, Tile src, Tile dst);
+
+	/** get a list with all legal moves
+	 */
+    std::vector<Action> &getAllLegalMoves(const Game &, std::vector<Action> &);
+    std::vector<Action> getAllLegalMoves(const Game &);
 };
 
 #endif // RULES_HPP
