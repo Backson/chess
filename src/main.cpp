@@ -163,7 +163,7 @@ void Main::finilize() {
 	al_uninstall_system();
 }
 
-int Main::main(int argc, char** argv)
+int Main::main(int argc, char **argv)
 {
 	_display = nullptr;
 	_event_queue = nullptr;
@@ -189,7 +189,8 @@ int Main::main(int argc, char** argv)
 
 	al_start_timer(_timer);
 
-	RandomBot bot;
+    RandomBot random_bot;
+	Bot &bot = random_bot;
 	bot.reset(DEFAULT_SITUATION);
 
 	bool shutdown = false;
@@ -278,7 +279,7 @@ int Main::main(int argc, char** argv)
 							selection = situation.INVALID_TILE;
 
 							bot.update(action);
-							action = bot.getAction();
+							action = bot.next_action();
 
 							if (!rules.isActionLegal(game.current_situation(), action))
                                 printf("bot is retarded.\n");

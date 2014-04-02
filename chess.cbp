@@ -74,12 +74,16 @@
 		<Unit filename="src/Action.hpp" />
 		<Unit filename="src/Board.cpp" />
 		<Unit filename="src/Board.hpp" />
+		<Unit filename="src/Bot.cpp" />
+		<Unit filename="src/Bot.hpp" />
 		<Unit filename="src/Game.cpp" />
 		<Unit filename="src/Game.hpp" />
 		<Unit filename="src/Piece.cpp" />
 		<Unit filename="src/Piece.hpp" />
 		<Unit filename="src/Position.cpp" />
 		<Unit filename="src/Position.hpp" />
+		<Unit filename="src/RandomBot.cpp" />
+		<Unit filename="src/RandomBot.hpp" />
 		<Unit filename="src/Rules.cpp" />
 		<Unit filename="src/Rules.hpp" />
 		<Unit filename="src/Situation.cpp" />

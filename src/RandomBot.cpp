@@ -18,28 +18,43 @@ static uint32 get_unique_seed() {
     }
 }
 
-RandomBot::RandomBot() : _random(get_unique_seed()) {
+RandomBot::RandomBot() :
+    Bot(),
+    _random(get_unique_seed())
+{
     // nothing
 }
-RandomBot::RandomBot(uint32 seed) : _random(seed) {
+RandomBot::RandomBot(uint32 seed) :
+    Bot(),
+    _random(seed)
+{
     // nothing
 }
 
-void RandomBot::reset() {
-    Situation situation;
-    reset(situation);
+RandomBot::RandomBot(const Situation &situation) :
+    Bot(situation),
+    _random(get_unique_seed())
+{
+    // nothing
 }
-void RandomBot::reset(const Situation &situation) {
-    _game.reset(situation);
+RandomBot::RandomBot(const Situation &situation, uint32 seed) :
+    Bot(situation),
+    _random(seed)
+{
+    // nothing
 }
 
+/* // only override this, if you need to
 void RandomBot::update(Action a) {
-    _game.action(a);
-}
+    Bot::update(a);
 
-Action RandomBot::getAction() {
+    // do your own stuff here
+}
+*/
+
+Action RandomBot::next_action() {
     Rules rules;
-    std::vector<Action> actions = rules.getAllLegalMoves(_game);
+    std::vector<Action> actions = rules.getAllLegalMoves(game());
     std::uniform_int_distribution<> dist(0, actions.size() - 1);
     int index = dist(_random);
     printf("bot is choosing from %d moves... %d!\n", actions.size(), index);

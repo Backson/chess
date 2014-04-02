@@ -1,23 +1,23 @@
 #ifndef RANDOM_BOT_HPP
 #define RANDOM_BOT_HPP
 
-#include "Game.hpp"
+#include "Bot.hpp"
 
 #include <random>
 
-class RandomBot {
+class RandomBot :
+    public Bot
+{
 public:
     RandomBot();
     RandomBot(uint32);
+    RandomBot(const Situation &);
+    RandomBot(const Situation &, uint32);
 
-    void reset();
-    void reset(const Situation &);
-
-    void update(Action);
-    Action getAction();
+    //virtual void update(Action) override;
+    virtual Action next_action() override;
 
 private:
-    Game _game;
     std::mt19937 _random;
 };
 
