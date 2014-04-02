@@ -12,6 +12,7 @@
 #include "Action.hpp"
 #include "Piece.hpp"
 #include "Rules.hpp"
+#include "RandomBot.hpp"
 
 static const int TIMER_BPS = 1000;
 static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
@@ -188,6 +189,9 @@ int Main::main(int argc, char** argv)
 
 	al_start_timer(_timer);
 
+	RandomBot bot;
+	bot.reset(DEFAULT_SITUATION);
+
 	bool shutdown = false;
 	int fps_counter = 0;
 	int fps = 0;
@@ -272,6 +276,21 @@ int Main::main(int argc, char** argv)
 							printf(" id:%d", action.type);
 							printf(" (promote to %d)\n", action.promotion);
 							selection = situation.INVALID_TILE;
+
+							bot.update(action);
+							action = bot.getAction();
+
+							if (!rules.isActionLegal(game.current_situation(), action))
+                                printf("bot is retarded.\n");
+
+							game.action(action);
+							printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
+							printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
+							printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
+							printf(" id:%d", action.type);
+							printf(" (promote to %d)\n", action.promotion);
+							selection = situation.INVALID_TILE;
+							bot.update(action);
 
 							_iter = --game.history().end();
 

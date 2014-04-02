@@ -76,10 +76,13 @@ public:
 	 */
 	bool hasLegalMove(const Position &, Tile src, Tile dst);
 
+    static const int EVERY_PROMOTION = 0x01;
+    static const int DRAW_CLAIMS     = 0x02;
+
 	/** get a list with all legal moves
 	 */
-    std::vector<Action> &getAllLegalMoves(const Game &, std::vector<Action> &);
-    std::vector<Action> getAllLegalMoves(const Game &);
+    std::vector<Action> &getAllLegalMoves(const Game &, std::vector<Action> &, int flags = 0);
+    std::vector<Action> getAllLegalMoves(const Game &, int flags = 0);
 };
 
 #endif // RULES_HPP

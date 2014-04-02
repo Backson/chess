@@ -324,8 +324,8 @@ bool Rules::isSquareInRange(const Board &board, Tile src, Tile dst, bool capture
 	{
 	case TYPE_PAWN: {
 		// generalize this section for both players
-		int8 direction;
-		int8 start_row;
+		Coord direction;
+		Coord start_row;
 		switch (board[src].player) {
 			case PLAYER_WHITE:
 				direction = +1;
@@ -401,7 +401,7 @@ bool Rules::hasLegalMove(const Position &position, Tile src, Tile dst) {
 	return isActionLegal(position, action);
 }
 
-std::vector<Action> &Rules::getAllLegalMoves(const Game &game, std::vector<Action> &actions) {
+std::vector<Action> &Rules::getAllLegalMoves(const Game &game, std::vector<Action> &actions, int flags) {
     const Situation &situation = game.current_situation();
     Player player = situation.active_player();
 
@@ -414,23 +414,30 @@ std::vector<Action> &Rules::getAllLegalMoves(const Game &game, std::vector<Actio
 
         Action a = examineMove(situation, src, dst);
         Coord end_row = player == PLAYER_WHITE ? situation.width() : 0;
-        if (situation[a.src].type == TYPE_PAWN && a.dst[1] == end_row) {
+        bool pawn_move = situation[a.src].type == TYPE_PAWN;
+        if (pawn_move && a.dst[1] == end_row) {
             a.promotion = TYPE_QUEEN;
+            if (!isActionLegal(situation, a))
+                continue;
             actions.push_back(a);
-            a.promotion = TYPE_ROOK;
-            actions.push_back(a);
-            a.promotion = TYPE_BISHOP;
-            actions.push_back(a);
-            a.promotion = TYPE_KNIGHT;
-            actions.push_back(a);
+            if (flags & EVERY_PROMOTION) {
+                a.promotion = TYPE_ROOK;
+                actions.push_back(a);
+                a.promotion = TYPE_BISHOP;
+                actions.push_back(a);
+                a.promotion = TYPE_KNIGHT;
+                actions.push_back(a);
+            }
         } else {
+            if (!isActionLegal(situation, a))
+                continue;
             actions.push_back(a);
         }
     }
 
     return actions;
 }
-std::vector<Action> Rules::getAllLegalMoves(const Game &game) {
+std::vector<Action> Rules::getAllLegalMoves(const Game &game, int flags) {
     std::vector<Action> actions;
     getAllLegalMoves(game, actions);
     return actions;
