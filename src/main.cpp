@@ -318,7 +318,6 @@ int Main::main(int argc, char** argv)
 		if (new_us_counter / 1000000 > us_counter / 1000000) {
 			fps = fps_counter;
 			fps_counter = 0;
-			printf("fps: %3d\n", fps);
 		}
 		us_counter = new_us_counter;
 
@@ -329,6 +328,7 @@ int Main::main(int argc, char** argv)
 		al_draw_filled_rectangle(440, 0, 640, 490, bg);
 		int lineno = 0;
 		int file = _iter->situation.en_passant_file();
+		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "fps: %3d\n", fps);
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "en passant:\n");
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", file);
 		al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "\n");
