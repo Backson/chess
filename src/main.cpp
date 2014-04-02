@@ -12,7 +12,7 @@
 #include "Action.hpp"
 #include "Piece.hpp"
 #include "Rules.hpp"
-#include "RandomBot.hpp"
+#include "SpeedyBot.hpp"
 
 static const int TIMER_BPS = 1000;
 static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
@@ -189,8 +189,8 @@ int Main::main(int argc, char **argv)
 
 	al_start_timer(_timer);
 
-    RandomBot random_bot;
-	Bot &bot = random_bot;
+    SpeedyBot speedy_bot;
+	Bot &bot = speedy_bot;
 	bot.reset(DEFAULT_SITUATION);
 
 	bool shutdown = false;
