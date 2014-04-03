@@ -169,14 +169,6 @@ Piece &Board::piece(Tile tile) {
 
 // OPERATORS
 
-Piece Board::operator[](Tile tile) const {
-	return piece(tile);
-}
-
-Piece &Board::operator[](Tile tile) {
-	return piece(tile);
-}
-
 bool Board::operator == (const Board &rhs) const {
 	if (this == &rhs) return true; // self-comparison
 

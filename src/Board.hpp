@@ -45,8 +45,8 @@ public:
 	bool isInBound(Tile tile) const;
 
 	// OPERATORS
-	Piece operator [] (Tile tile) const;
-	Piece &operator [] (Tile tile);
+	inline Piece operator [] (Tile tile) const { return piece(tile); }
+	inline Piece &operator [] (Tile tile) { return piece(tile); }
 
 	bool operator == (const Board &rhs) const;
 	bool operator != (const Board &rhs) const;
@@ -58,7 +58,6 @@ public:
 	void movePiece(Tile src, Tile dst);
 
 	// MISC
-
 	static Board factoryStandard();
 	static Board factoryEmpty();
 
