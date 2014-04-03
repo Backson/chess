@@ -187,15 +187,15 @@ bool Rules::isRegularMoveLegal(const Position &position, Action a) {
 
 Tile Rules::getKingStartingSquare(const Board &board, Player player) {
 	if (player == PLAYER_WHITE)
-		return Tile((int8)4, (int8)0);
+		return Tile(4, 0);
 	else if (player == PLAYER_BLACK)
-		return Tile((int8)4, (int8)(board.height() - 1));
+		return Tile(4, (board.height() - 1));
 	else
 		return Board::INVALID_TILE;
 }
 
 Tile Rules::getRookStartingSquare(const Board &board, Player player, CastlingType type) {
-	int8 x, y;
+	Coord x, y;
 	if (player == PLAYER_WHITE)
 		y = 0;
 	else if (player == PLAYER_BLACK)
@@ -214,10 +214,11 @@ Tile Rules::getRookStartingSquare(const Board &board, Player player, CastlingTyp
 bool Rules::isPlayerInCheck(const Board &board, Player player) {
 	// find players king
 	Tile king = Board::INVALID_TILE;
-	for (int8 y = 0; y < board.height(); ++y)
-		for (int8 x = 0; x < board.width(); ++x) {
+	for (Coord y = 0; y < board.height(); ++y)
+		for (Coord x = 0; x < board.width(); ++x) {
 			Tile tile = Tile(x, y);
-			if (board[tile].type == TYPE_KING && board[tile].player == player) {
+			Piece piece = board[tile];
+			if (piece.type == TYPE_KING && piece.player == player) {
 				king = tile;
 				goto BREAK_FROM_NESTED_LOOP;
 			}
@@ -230,8 +231,8 @@ bool Rules::isPlayerInCheck(const Board &board, Player player) {
 
 bool Rules::doesPlayerAttackSquare(const Board &board, Tile tile, Player p) {
 	// en passant capture is completely ignored for this function.
-	static const int8 sx[] = {-1, -1, -1,  0,  0, +1, +1, +1};
-	static const int8 sy[] = {-1,  0, +1, -1, +1, -1,  0, +1};
+	static const Coord sx[] = {-1, -1, -1,  0,  0, +1, +1, +1};
+	static const Coord sy[] = {-1,  0, +1, -1, +1, -1,  0, +1};
 
 	// for all eight directions
 	for (int i = 0; i < 8; ++i) {
@@ -241,10 +242,10 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Tile tile, Player p) {
 		// ...until we hit the edge of the board...
 		while (board.isInBound(iter)) {
 			// ...or we find a piece in our way.
-			if (board[iter].type != TYPE_NONE) {
-				bool is_opponent = board[iter].player == p;
-				bool can_reach_me = isSquareInRange(board, iter, tile, true);
-				if (is_opponent && can_reach_me) {
+			Piece piece = board[iter];
+			if (piece.type != TYPE_NONE) {
+				bool is_opponent = piece.player == p;
+				if (is_opponent && isSquareInRange(board, iter, tile, true)) {
 					return true;
 				} else {
 					goto NEXT_DIRECTION;
@@ -256,16 +257,16 @@ bool Rules::doesPlayerAttackSquare(const Board &board, Tile tile, Player p) {
 	} // for each of the eight direction
 
 	// check for knights
-	static const int8 sx_knight[] = {-1, -1, +1, +1, -2, -2, +2, +2};
-	static const int8 sy_knight[] = {-2, +2, -2, +2, -1, +1, -1, +1};
+	static const Coord sx_knight[] = {-1, -1, +1, +1, -2, -2, +2, +2};
+	static const Coord sy_knight[] = {-2, +2, -2, +2, -1, +1, -1, +1};
 	for (int i = 0; i < 8; ++i) {
 		Tile knight = tile + Tile(sx_knight[i], sy_knight[i]);
 		if (!board.isInBound(knight))
 			continue;
-		if (board[knight].type != TYPE_NONE) {
-			bool is_opponent = board[knight].player == p;
-			bool can_reach_me = isSquareInRange(board, knight, tile, true);
-			if (is_opponent && can_reach_me) {
+        Piece piece = board[knight];
+		if (piece.type == TYPE_KNIGHT) {
+			bool is_opponent = piece.player == p;
+			if (is_opponent && isSquareInRange(board, knight, tile, true)) {
 				return true;
 			}
 		}
@@ -402,43 +403,158 @@ bool Rules::hasLegalMove(const Position &position, Tile src, Tile dst) {
 }
 
 std::vector<Action> &Rules::getAllLegalMoves(const Game &game, std::vector<Action> &actions, int flags) {
-    const Situation &situation = game.current_situation();
-    Player player = situation.active_player();
+    return getAllLegalMoves(game.current_situation(), actions, flags);
+}
 
-	for (Coord y1 = 0; y1 < situation.height(); ++y1)
-    for (Coord x1 = 0; x1 < situation.width(); ++x1)
-    for (Coord y2 = 0; y2 < situation.height(); ++y2)
-    for (Coord x2 = 0; x2 < situation.width(); ++x2){
-        Tile src(x1, y1);
-        Tile dst(x2, y2);
+std::vector<Action> Rules::getAllLegalMoves(const Game &game, int flags) {
+    return getAllLegalMoves(game.current_situation(), flags);
+}
 
-        Action a = examineMove(situation, src, dst);
-        Coord end_row = player == PLAYER_WHITE ? situation.width() : 0;
-        bool pawn_move = situation[a.src].type == TYPE_PAWN;
-        if (pawn_move && a.dst[1] == end_row) {
-            a.promotion = TYPE_QUEEN;
-            if (!isActionLegal(situation, a))
-                continue;
-            actions.push_back(a);
-            if (flags & EVERY_PROMOTION) {
-                a.promotion = TYPE_ROOK;
-                actions.push_back(a);
-                a.promotion = TYPE_BISHOP;
-                actions.push_back(a);
-                a.promotion = TYPE_KNIGHT;
-                actions.push_back(a);
-            }
-        } else {
-            if (!isActionLegal(situation, a))
-                continue;
-            actions.push_back(a);
+std::vector<Action> &Rules::getAllLegalMoves(const Situation &situation, std::vector<Action> &actions, int flags) {
+    return getAllLegalMoves(static_cast<const Position &>(situation), actions, flags);
+}
+
+std::vector<Action> Rules::getAllLegalMoves(const Situation &situation, int flags) {
+    return getAllLegalMoves(static_cast<const Position &>(situation), flags);
+}
+
+std::vector<Action> &Rules::getAllLegalMoves(const Position &position, std::vector<Action> &actions, int flags) {
+    Player player = position.active_player();
+
+    Coord forward = player == PLAYER_WHITE ? +1 : -1;
+    Coord pawn_end_row = player == PLAYER_WHITE ? position.height() : 0;
+    Coord pawn_home_row = pawn_end_row - 6 * forward;
+
+	for (Coord y = 0; y < position.height(); ++y)
+    for (Coord x = 0; x < position.width(); ++x) {
+        Tile src(x, y);
+
+        Piece piece = position[src];
+        if (piece.player != position.active_player())
+            continue;
+
+        switch (piece.type) {
+        case TYPE_NONE:
+            break;
+
+        case TYPE_KING: {
+            static const Coord sx[] = {-1, -1, -1,  0,  0, +1, +1, +1, +2, -2};
+            static const Coord sy[] = {-1,  0, +1, -1, +1, -1,  0, +1,  0,  0};
+
+            for (int i = 0; i < 8; ++i) {
+                Tile dst = src + Tile(sx[i], sy[i]);
+                if (!position.isInBound(dst))
+                    continue;
+                Action a = examineMove(position, src, dst);
+                if (isActionLegal(position, a))
+                    actions.push_back(a);
+            } // check all eight king positions
         }
-    }
+
+        case TYPE_QUEEN:
+        // fall through
+        case TYPE_ROOK: {
+            static const Coord sx[] = {+1, -1,  0,  0};
+            static const Coord sy[] = { 0,  0, -1, +1};
+
+            for (int i = 0; i < 4; ++i) {
+                Tile step(sx[i], sy[i]);
+                Tile dst = src + step;
+                while (position.isInBound(dst)) {
+                    Action a = examineMove(position, src, dst);
+                    if (isActionLegal(position, a))
+                        actions.push_back(a);
+                    dst += step;
+                }
+            } // check all four rook positions
+
+            if (piece.type != TYPE_QUEEN)
+                break;
+        }
+        // fall trough for queens
+        case TYPE_BISHOP: {
+            static const Coord sx[] = {+1, +1, -1, -1};
+            static const Coord sy[] = {+1, -1, -1, +1};
+
+            for (int i = 0; i < 4; ++i) {
+                Tile step(sx[i], sy[i]);
+                Tile dst = src + step;
+                while (position.isInBound(dst)) {
+                    Action a = examineMove(position, src, dst);
+                    if (isActionLegal(position, a))
+                        actions.push_back(a);
+                    dst += step;
+                }
+            } // check all four bishop positions
+
+            break;
+        }
+
+        case TYPE_KNIGHT: {
+            static const Coord sx[] = {-1, -1, +1, +1, -2, -2, +2, +2};
+            static const Coord sy[] = {-2, +2, -2, +2, -1, +1, -1, +1};
+
+            for (int i = 0; i < 8; ++i) {
+                Tile dst = src + Tile(sx[i], sy[i]);
+                if (!position.isInBound(dst))
+                    continue;
+                Action a = examineMove(position, src, dst);
+                if (isActionLegal(position, a))
+                    actions.push_back(a);
+            } // check all eight knight positions
+        }
+        case TYPE_PAWN: {
+            static const Coord sx[]    =  { 0, -1, +1};
+            static const Coord sy[][4] = {{+1, +1, +1},
+                                          {-1, -1, -1}};
+
+            for (int i = 0; i < 4; ++i) {
+                Tile dst = src + Tile(sx[i], sy[player][i]);
+                if (!position.isInBound(dst))
+                    continue;
+                Action a = examineMove(position, src, dst);
+                if (dst[1] == pawn_end_row) {
+                    a.promotion = TYPE_QUEEN;
+                    if (isActionLegal(position, a)) {
+                        actions.push_back(a);
+                        if (flags & EVERY_PROMOTION) {
+                            a.promotion = TYPE_ROOK;
+                            actions.push_back(a);
+                            a.promotion = TYPE_BISHOP;
+                            actions.push_back(a);
+                            a.promotion = TYPE_KNIGHT;
+                            actions.push_back(a);
+                        }
+                    }
+                } else {
+                    if (isActionLegal(position, a))
+                        actions.push_back(a);
+                    if (src[1] == pawn_home_row) {
+                        a = examineMove(position, src, dst);
+                        if (isActionLegal(position, a))
+                            actions.push_back(a);
+                    }
+                }
+            } // check all four pawn positions
+        }
+        default: {
+            for (Coord y = 0; y < position.height(); ++y)
+            for (Coord x = 0; x < position.width(); ++x) {
+                Tile dst(x, y);
+                Action a = examineMove(position, src, dst);
+                if (isActionLegal(position, a))
+                    actions.push_back(a);
+            }
+        } // default
+
+        } // switch (piece.type)
+    } // for any source tile
 
     return actions;
 }
-std::vector<Action> Rules::getAllLegalMoves(const Game &game, int flags) {
+
+std::vector<Action> Rules::getAllLegalMoves(const Position &position, int flags) {
     std::vector<Action> actions;
-    getAllLegalMoves(game, actions);
+    getAllLegalMoves(position, actions);
     return actions;
 }

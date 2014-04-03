@@ -83,6 +83,10 @@ public:
 	 */
     std::vector<Action> &getAllLegalMoves(const Game &, std::vector<Action> &, int flags = 0);
     std::vector<Action> getAllLegalMoves(const Game &, int flags = 0);
+    std::vector<Action> &getAllLegalMoves(const Situation &, std::vector<Action> &, int flags = 0);
+    std::vector<Action> getAllLegalMoves(const Situation &, int flags = 0);
+    std::vector<Action> &getAllLegalMoves(const Position &, std::vector<Action> &, int flags = 0);
+    std::vector<Action> getAllLegalMoves(const Position &, int flags = 0);
 };
 
 #endif // RULES_HPP
