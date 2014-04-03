@@ -19,7 +19,7 @@ public:
     virtual void update(Action);
     virtual Action next_action() = 0;
 
-private:
+protected:
     Game _game;
 };
 

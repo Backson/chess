@@ -16,9 +16,8 @@ public:
 	virtual Action next_action() override;
 
 private:
-	int rate_game(int depth, const Situation &, Action *outAction = 0);
 	int rate_game(int depth, Action *outAction = 0);
-	int rate_game_flat(const Situation &);
+	int rate_game_flat();
 };
 
 #endif // RANDOM_BOT_HPP
