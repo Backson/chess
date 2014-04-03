@@ -5,6 +5,7 @@
 #include "compare.hpp"
 
 #include <map>
+#include <unordered_map>
 #include <list>
 
 struct HistoryEntry {
@@ -47,7 +48,8 @@ private:
 	/// contains all past positions and corresponding moves
 	std::list<HistoryEntry> _history;
 	/// track the number of times each position has occured
-	std::map<Position, int, PositionCompare> _position_repetition;
+	//std::map<Position, int, PositionCompare> _position_repetition;
+	std::unordered_map<Position, int, PositionHash> _position_repetition;
 };
 
 #endif // GAME_HPP
