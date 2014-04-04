@@ -88,6 +88,8 @@
 		<Unit filename="src/Rules.hpp" />
 		<Unit filename="src/Situation.cpp" />
 		<Unit filename="src/Situation.hpp" />
+		<Unit filename="src/SpeedyBot.cpp" />
+		<Unit filename="src/SpeedyBot.hpp" />
 		<Unit filename="src/View.cpp" />
 		<Unit filename="src/View.hpp" />
 		<Unit filename="src/compare.cpp" />
