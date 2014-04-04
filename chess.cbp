@@ -98,6 +98,8 @@
 		<Unit filename="src/stdtypes.hpp" />
 		<Unit filename="src/vec.cpp" />
 		<Unit filename="src/vec.hpp" />
+		<Unit filename="src/zobrist.cpp" />
+		<Unit filename="src/zobrist.hpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
