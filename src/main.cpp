@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -13,26 +14,33 @@
 #include "Piece.hpp"
 #include "Rules.hpp"
 #include "SpeedyBot.hpp"
+#include "RandomBot.hpp"
+
+using std::shared_ptr;
+using std::move;
 
 static const int TIMER_BPS = 1000;
 static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
 
 class Main {
 public:
-	void initialize(int argc, char** argv);
+	Main() = default;
+
+	void initialize(int argc, char **argv);
 	void finilize();
-	int main(int argc, char** argv);
+	int main(int argc, char **argv);
+
 private:
-	ALLEGRO_DISPLAY *_display;
-	ALLEGRO_EVENT_QUEUE *_event_queue;
-	ALLEGRO_TIMER *_timer;
-	ALLEGRO_FONT *_font;
+	ALLEGRO_DISPLAY *_display = nullptr;
+	ALLEGRO_EVENT_QUEUE *_event_queue = nullptr;
+	ALLEGRO_TIMER *_timer = nullptr;
+	ALLEGRO_FONT *_font = nullptr;
 
-	Game *_game;
+	Game *_game = nullptr;
 	Game::HistoryConstIter _iter;
-	View *_view;
+	View *_view = nullptr;
 
-	bool _panic;
+	bool _panic = nullptr;
 };
 
 int main(int argc, char** argv) {
@@ -95,7 +103,9 @@ void Main::initialize(int argc, char **argv) {
 
 	// init game model
 	{
-		Situation situation(Position::factoryStandard(), PLAYER_WHITE);
+		shared_ptr<Board> shared_board = Board::factoryStandard();
+		Situation situation(move(*shared_board), PLAYER_WHITE);
+		shared_board.reset();
 		_game = new Game(situation);
 		const Situation &current = _game->current_situation();
 		auto w = current.width();
@@ -181,7 +191,9 @@ int Main::main(int argc, char **argv)
 		exit(-1);
 	}
 
-	const Board DEFAULT_BOARD = Board::factoryStandard();
+	shared_ptr<Board> shared_board = Board::factoryStandard();
+	const Board DEFAULT_BOARD = move(*shared_board);
+	shared_board.reset();
 	const Situation DEFAULT_SITUATION(DEFAULT_BOARD, PLAYER_WHITE);
 	Game &game = *_game;
 	game.reset(DEFAULT_SITUATION);

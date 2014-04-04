@@ -68,24 +68,25 @@ public:
 private:
 	/// size of the board in tiles
 	const int _board_width, _board_height;
-	/// in which orientation the last frame was drawn
-	Orientation _last_orientation;
+
 	/// in which orientation to draw
 	Orientation _orientation;
 	/// size of the border in pixels
 	const float _border_size;
-
 	/// true, if numbers and letters should be drawn next to the board
 	bool _decoration;
-
 	/// where was the board last drawn? (top left corner, border inclusive)
 	int _x, _y;
+
 	/// The position that was last drawn
 	Position _position;
+	/// in which orientation the last frame was drawn
+	Orientation _last_orientation;
 	/// which selection was drawn last frame (invalid if none was drawn)
 	Tile _selection;
 	/// where the cursor was drawn last frame (invalid if none was drawn)
 	Tile _cursor;
+
 	/// draw all the frames here (dirty rect) and blit this to target
 	ALLEGRO_BITMAP* _buffer;
 
