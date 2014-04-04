@@ -13,26 +13,30 @@
 #include "Piece.hpp"
 #include "Rules.hpp"
 #include "SpeedyBot.hpp"
+#include "RandomBot.hpp"
 
 static const int TIMER_BPS = 1000;
 static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
 
 class Main {
 public:
-	void initialize(int argc, char** argv);
+	Main() = default;
+
+	void initialize(int argc, char **argv);
 	void finilize();
-	int main(int argc, char** argv);
+	int main(int argc, char **argv);
+
 private:
-	ALLEGRO_DISPLAY *_display;
-	ALLEGRO_EVENT_QUEUE *_event_queue;
-	ALLEGRO_TIMER *_timer;
-	ALLEGRO_FONT *_font;
+	ALLEGRO_DISPLAY *_display = nullptr;
+	ALLEGRO_EVENT_QUEUE *_event_queue = nullptr;
+	ALLEGRO_TIMER *_timer = nullptr;
+	ALLEGRO_FONT *_font = nullptr;
 
-	Game *_game;
+	Game *_game = nullptr;
 	Game::HistoryConstIter _iter;
-	View *_view;
+	View *_view = nullptr;
 
-	bool _panic;
+	bool _panic = nullptr;
 };
 
 int main(int argc, char** argv) {
@@ -95,7 +99,8 @@ void Main::initialize(int argc, char **argv) {
 
 	// init game model
 	{
-		Situation situation(Position::factoryStandard(), PLAYER_WHITE);
+		Board board = Board::factoryStandard();
+		Situation situation(board, PLAYER_WHITE);
 		_game = new Game(situation);
 		const Situation &current = _game->current_situation();
 		auto w = current.width();
@@ -189,8 +194,8 @@ int Main::main(int argc, char **argv)
 
 	al_start_timer(_timer);
 
-    SpeedyBot speedy_bot;
-	Bot &bot = speedy_bot;
+    RandomBot random_bot;
+	Bot &bot = random_bot;
 	bot.reset(DEFAULT_SITUATION);
 
 	bool shutdown = false;

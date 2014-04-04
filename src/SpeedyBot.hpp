@@ -1,5 +1,5 @@
-#ifndef RANDOM_BOT_HPP
-#define RANDOM_BOT_HPP
+#ifndef SPEEDY_BOT_HPP
+#define SPEEDY_BOT_HPP
 
 #include "Bot.hpp"
 
@@ -21,4 +21,4 @@ private:
 	int rate_game_flat(const Situation &);
 };
 
-#endif // RANDOM_BOT_HPP
+#endif // SPEEDY_BOT_HPP

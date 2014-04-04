@@ -22,15 +22,18 @@ bool isSideway(Orientation orientation) {
 
 View::View(int board_width, int board_height, Orientation orientation, float border_size) :
 	_board_width(board_width), _board_height(board_height),
-	_orientation(orientation), _border_size(border_size)
+	_orientation(orientation),
+	_border_size(border_size),
+	_decoration(border_size > 0.0),
+	_x(0.0), _y(0.0),
+
+	_position(board_width, board_height),
+	_last_orientation(WHITE_AT_THE_BOTTOM),
+	_selection(-1, -1),
+	_cursor(-1, -1),
+
+	_buffer(nullptr)
 {
-	_decoration = border_size > 0.0;
-	_x = 0.0;
-	_y = 0.0;
-	_last_orientation = WHITE_AT_THE_BOTTOM;
-	_position = Position(board_width, board_height);
-	_selection = Tile(-1, -1);
-	_cursor = Tile(-1, -1);
 	_buffer = al_create_bitmap(getPanelWidthPixels(), getPanelHeightPixels());
 	al_set_target_bitmap(_buffer);
 	drawPanel(0.0, 0.0, _position, _selection);
