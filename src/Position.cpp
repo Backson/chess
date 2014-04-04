@@ -4,6 +4,7 @@
 #include "Action.hpp"
 #include "Piece.hpp"
 #include "Rules.hpp"
+#include "zobrist.hpp"
 
 // LIFECYCLE
 
@@ -87,15 +88,26 @@ bool &Position::can_castle(Player player, CastlingType type) {
 	return _can_castle[player][type];
 }
 
+uint32 Position::hash_value() const {
+	if(!_hashed)
+		hash();
+	return _hash_value;
+}
+
 // OPERATIONS
 
 void Position::action(const Action &a) {
 	const Player opponent = static_cast<Player>(1 - _active_player);
 
+	if(!_hashed)
+		hash();
+
 	// check for king moves
 	if (piece(a.src).type == TYPE_KING) {
 		_can_castle[a.player][KINGSIDE] = false;
 		_can_castle[a.player][QUEENSIDE] = false;
+		_hash_value ^= zobrist_castling(a.player, KINGSIDE);
+		_hash_value ^= zobrist_castling(a.player, QUEENSIDE);
 	}
 
 	// set the en passant chance
@@ -108,6 +120,7 @@ void Position::action(const Action &a) {
 		bool pawnRight = isInBound(right) && piece(right) == p;
 		if(pawnLeft || pawnRight) {
 			_en_passant_file = a.dst[0];
+			_hash_value ^= zobrist_file(a.dst[0]);
 		}
 	}
 
@@ -117,10 +130,15 @@ void Position::action(const Action &a) {
 			Coord x = castling == KINGSIDE ? width() - 1 : 0;
 			Coord y = player == PLAYER_WHITE ? 0 : height() - 1;
 			if (a.src == Tile(x, y) || a.dst == Tile(x, y))
+			{
 				_can_castle[player][castling] = false;
+				_hash_value ^= zobrist_castling((Player) player, (CastlingType) castling);
+			}
 		}
 
 	// actually move the piece
+	_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
+	_hash_value ^= zobrist_piece_tile(piece(a.src), a.src, width());
 	movePiece(a.src, a.dst);
 
 	// move the rook (castlings only)
@@ -129,19 +147,48 @@ void Position::action(const Action &a) {
 		Coord sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
 		Tile rook_src = Tile(sx > 0 ? width() - 1 : 0, home_row);
 		Tile rook_dst = a.src + Tile(sx, 0);
+		_hash_value ^= zobrist_piece_tile(piece(rook_src), rook_src, width());
 		movePiece(rook_src, rook_dst);
+		_hash_value ^= zobrist_piece_tile(piece(rook_dst), rook_dst, width());
 	}
 
 	// do piece transformations
 	if (a.promotion != TYPE_NONE) {
 		piece(a.dst) = Piece{piece(a.dst).player, a.promotion};
 	}
+	_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
 
 	// remove pieces that were captured en passant
 	if (a.type == EN_PASSANT) {
+		_hash_value ^= zobrist_piece_tile(piece(Tile(a.dst[0], a.src[1])), Tile(a.dst[0], a.src[1]), width());
 		removePiece(Tile(a.dst[0], a.src[1]));
 	}
 
 	// next player
 	_active_player = opponent;
+	_hash_value ^= zobrist_player();
+}
+
+// PRIVATE
+
+void Position::hash() const {
+	auto w = width();
+	auto h = height();
+	_hash_value = 0;
+
+	for (Coord y = 0; y < h; ++y)
+	for (Coord x = 0; x < w; ++x) {
+		Tile tile(x, y);
+		_hash_value ^= zobrist_piece_tile(piece(tile), tile, w);
+	}
+
+	_hash_value ^= zobrist_file(en_passant_file());
+	if(can_castle(PLAYER_WHITE, KINGSIDE))
+		_hash_value ^= zobrist_castling(PLAYER_WHITE, KINGSIDE);
+	if(can_castle(PLAYER_WHITE, QUEENSIDE))
+		_hash_value ^= zobrist_castling(PLAYER_WHITE, QUEENSIDE);
+	if(can_castle(PLAYER_BLACK, KINGSIDE))
+		_hash_value ^= zobrist_castling(PLAYER_BLACK, KINGSIDE);
+	if(can_castle(PLAYER_BLACK, QUEENSIDE))
+		_hash_value ^= zobrist_castling(PLAYER_BLACK, QUEENSIDE);
 }

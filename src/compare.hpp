@@ -11,10 +11,6 @@ struct PositionCompare {
 	bool operator () (const Position &, const Position &) const;
 };
 
-struct BoardHash {
-	uint32 operator () (const Board &) const;
-};
-
 struct PositionHash {
 	uint32 operator () (const Position &) const;
 };
