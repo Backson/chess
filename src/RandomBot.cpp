@@ -58,5 +58,13 @@ Action RandomBot::next_action() {
     std::uniform_int_distribution<> dist(0, actions.size() - 1);
     int index = dist(_random);
     printf("bot is choosing from %d moves... %d!\n", actions.size(), index);
+    for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
+		if (iter != actions.begin()) {
+			printf(" ");
+		}
+		Action a = *iter;
+		printf("%c%c->%c%c", 'A'+a.src[0], '1'+a.src[1], 'A'+a.dst[0], '1'+a.dst[1]);
+    }
+    printf("\n");
     return actions[index];
 }

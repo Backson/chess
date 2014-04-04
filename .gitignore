@@ -35,3 +35,6 @@ Release/
 *.depend
 *.layout
 *.mk
+
+# analyser files
+CppCheckResults.xml

@@ -505,11 +505,12 @@ std::vector<Action> &Rules::getAllLegalMoves(const Position &position, std::vect
         }
         case TYPE_PAWN: {
             static const Coord sx[]    =  { 0, -1, +1};
-            static const Coord sy[][4] = {{+1, +1, +1},
+            static const Coord sy[][3] = {{+1, +1, +1},
                                           {-1, -1, -1}};
 
-            for (int i = 0; i < 4; ++i) {
-                Tile dst = src + Tile(sx[i], sy[player][i]);
+            for (int i = 0; i < 3; ++i) {
+				Tile s = Tile(sx[i], sy[player][i]);
+                Tile dst = src + s;
                 if (!position.isInBound(dst))
                     continue;
                 Action a = examineMove(position, src, dst);
@@ -530,12 +531,13 @@ std::vector<Action> &Rules::getAllLegalMoves(const Position &position, std::vect
                     if (isActionLegal(position, a))
                         actions.push_back(a);
                     if (src[1] == pawn_home_row) {
-                        a = examineMove(position, src, dst);
+                        a = examineMove(position, src, dst + s);
                         if (isActionLegal(position, a))
                             actions.push_back(a);
                     }
                 }
             } // check all four pawn positions
+            break;
         }
         default: {
             for (Coord y = 0; y < position.height(); ++y)
