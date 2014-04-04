@@ -1,4 +1,5 @@
 #include "compare.hpp"
+#include "Board.hpp"
 
 bool BoardCompare::operator () (const Board &lhs, const Board &rhs) const {
 	if (lhs.width() < rhs.width())

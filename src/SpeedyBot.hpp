@@ -1,7 +1,9 @@
-#ifndef RANDOM_BOT_HPP
-#define RANDOM_BOT_HPP
+#ifndef SPEEDY_BOT_HPP
+#define SPEEDY_BOT_HPP
 
 #include "Bot.hpp"
+
+#include <random>
 
 class SpeedyBot :
     public Bot
@@ -16,8 +18,8 @@ public:
 	virtual Action next_action() override;
 
 private:
-	int rate_game(int depth, Action *outAction = 0);
-	int rate_game_flat();
+	float rate_game(int, Action * = 0);
+	float rate_game_flat();
 };
 
-#endif // RANDOM_BOT_HPP
+#endif // SPEEDY_BOT_HPP

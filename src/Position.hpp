@@ -30,20 +30,18 @@ public:
 	Coord &en_passant_file();
 	bool can_castle(Player, CastlingType) const;
 	bool &can_castle(Player, CastlingType);
-	uint32 hash_value() const;
 
 	// OPERATIONS
 	void action(const Action &action);
+
+protected:
+	virtual void hash() const;
 
 private:
 	Player _active_player = PLAYER_NONE;
 	Coord _en_passant_file = -1;
 	// _can_castle[player][castling_type]
 	bool _can_castle[2][2] = {{false, false}, {false, false}};
-	mutable uint32 _hash_value = 0;
-	mutable bool _hashed = false;
-
-	void hash() const;
 };
 
 #endif // POSITION_HPP

@@ -1,4 +1,5 @@
 #include "Board.hpp"
+#include "zobrist.hpp"
 
 // LIFECYCLE
 
@@ -192,10 +193,14 @@ bool Board::operator != (const Board &rhs) const {
 }
 
 void Board::removePiece(Tile tile) {
+	_hash_value ^= zobrist_piece_tile(piece(tile), tile, width());
 	piece(tile) = Piece::NONE;
 }
 
 void Board::movePiece(Tile src, Tile dst) {
+	_hash_value ^= zobrist_piece_tile(piece(src), src, width());
+	_hash_value ^= zobrist_piece_tile(piece(dst), dst, width());
+	_hash_value ^= zobrist_piece_tile(piece(src), dst, width());
 	piece(dst) = piece(src);
 	piece(src) = Piece::NONE;
 }
@@ -212,6 +217,25 @@ bool Board::isInBound(Tile tile) const {
 	return true;
 }
 
+uint32 Board::hash_value() const {
+	if(!_hashed)
+		hash();
+	return _hash_value;
+}
+
+// HASH
+
+void Board::hash() const {
+	auto w = width();
+	auto h = height();
+	_hash_value = 0;
+
+	for (Coord y = 0; y < h; ++y)
+	for (Coord x = 0; x < w; ++x) {
+		Tile tile(x, y);
+		_hash_value ^= zobrist_piece_tile(piece(tile), tile, w);
+	}
+}
 // ================================================================
 
 Board Board::factoryStandard() {

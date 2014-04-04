@@ -58,6 +58,7 @@ bool Position::operator == (const Position &other) const {
 
 	return true;
 }
+
 bool Position::operator != (const Position &other) const {
 	return !operator == (other);
 }
@@ -86,12 +87,6 @@ bool Position::can_castle(Player player, CastlingType type) const {
 
 bool &Position::can_castle(Player player, CastlingType type) {
 	return _can_castle[player][type];
-}
-
-uint32 Position::hash_value() const {
-	if(!_hashed)
-		hash();
-	return _hash_value;
 }
 
 // OPERATIONS
@@ -137,8 +132,6 @@ void Position::action(const Action &a) {
 		}
 
 	// actually move the piece
-	_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
-	_hash_value ^= zobrist_piece_tile(piece(a.src), a.src, width());
 	movePiece(a.src, a.dst);
 
 	// move the rook (castlings only)
@@ -147,20 +140,18 @@ void Position::action(const Action &a) {
 		Coord sx = (a.dst - a.src)[0] > 0 ? +1 : -1;
 		Tile rook_src = Tile(sx > 0 ? width() - 1 : 0, home_row);
 		Tile rook_dst = a.src + Tile(sx, 0);
-		_hash_value ^= zobrist_piece_tile(piece(rook_src), rook_src, width());
 		movePiece(rook_src, rook_dst);
-		_hash_value ^= zobrist_piece_tile(piece(rook_dst), rook_dst, width());
 	}
 
 	// do piece transformations
 	if (a.promotion != TYPE_NONE) {
+		_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
 		piece(a.dst) = Piece{piece(a.dst).player, a.promotion};
+		_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
 	}
-	_hash_value ^= zobrist_piece_tile(piece(a.dst), a.dst, width());
 
 	// remove pieces that were captured en passant
 	if (a.type == EN_PASSANT) {
-		_hash_value ^= zobrist_piece_tile(piece(Tile(a.dst[0], a.src[1])), Tile(a.dst[0], a.src[1]), width());
 		removePiece(Tile(a.dst[0], a.src[1]));
 	}
 
@@ -169,19 +160,10 @@ void Position::action(const Action &a) {
 	_hash_value ^= zobrist_player();
 }
 
-// PRIVATE
+// HASH
 
 void Position::hash() const {
-	auto w = width();
-	auto h = height();
-	_hash_value = 0;
-
-	for (Coord y = 0; y < h; ++y)
-	for (Coord x = 0; x < w; ++x) {
-		Tile tile(x, y);
-		_hash_value ^= zobrist_piece_tile(piece(tile), tile, w);
-	}
-
+	Board::hash();
 	_hash_value ^= zobrist_file(en_passant_file());
 	if(can_castle(PLAYER_WHITE, KINGSIDE))
 		_hash_value ^= zobrist_castling(PLAYER_WHITE, KINGSIDE);

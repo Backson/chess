@@ -4,7 +4,7 @@
 
 #include <cstdio>
 #include <time.h>
-#include <climits>
+#include <cfloat>
 
 SpeedyBot::SpeedyBot() :
 	Bot()
@@ -35,14 +35,13 @@ Action SpeedyBot::next_action() {
 	return action;
 }
 
-int SpeedyBot::rate_game(int depth, Action *outAction) {
-
+float SpeedyBot::rate_game(int depth, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
-	int bestRating = INT_MIN;
+	float bestRating = -FLT_MAX;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		_game.action(*iter);
-		int rating;
+		float rating;
 		if (depth == 0)
 			rating = -rate_game_flat();
 		else
@@ -58,8 +57,8 @@ int SpeedyBot::rate_game(int depth, Action *outAction) {
 	return bestRating;
 }
 
-int SpeedyBot::rate_game_flat() {
-	int rating = 0;
+float SpeedyBot::rate_game_flat() {
+	float rating = 0;
 	const Situation &situation = _game.current_situation();
 	for (Coord y = 0; y < situation.height(); ++y)
 	for (Coord x = 0; x < situation.width(); ++x) {
@@ -93,5 +92,9 @@ int SpeedyBot::rate_game_flat() {
 		}
 	}
 
-	return rating;
+	Rules rules;
+	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
+	if(numMoves == 0)
+		return -FLT_MAX;
+	return rating * 200 + numMoves + (rand() / (float) RAND_MAX);
 }

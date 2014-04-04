@@ -44,6 +44,8 @@ public:
 
 	bool isInBound(Tile tile) const;
 
+	uint32 hash_value() const;
+
 	// OPERATORS
 	inline Piece operator [] (Tile tile) const { return piece(tile); }
 	inline Piece &operator [] (Tile tile) { return piece(tile); }
@@ -63,7 +65,14 @@ public:
 
 	static const Tile INVALID_TILE;
 
+protected:
+
+	mutable uint32 _hash_value = 0;
+	mutable bool _hashed = false;
+	virtual void hash() const;
+
 private:
+
 	Coord _width = BOARD_WIDTH_DEFAULT;
 	Coord _height = BOARD_HEIGHT_DEFAULT;
 	Piece** _pieces = nullptr;
