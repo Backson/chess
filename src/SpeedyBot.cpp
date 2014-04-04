@@ -6,6 +6,9 @@
 #include <time.h>
 #include <cfloat>
 
+static float INITIAL_RATING = -99999999.0f;
+static float VERY_BAD = -9999999.0f;
+
 SpeedyBot::SpeedyBot() :
 	Bot()
 {
@@ -28,9 +31,9 @@ void SpeedyBot::update(Action a) {
 
 Action SpeedyBot::next_action() {
 	Action action;
-	int bestRating = rate_game(2, &action);
+	float bestRating = rate_game(2, &action);
 
-	printf("bestRating: %d\n", bestRating);
+	printf("bestRating: %.0f\n", bestRating);
 
 	return action;
 }
@@ -38,7 +41,7 @@ Action SpeedyBot::next_action() {
 float SpeedyBot::rate_game(int depth, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
-	float bestRating = -FLT_MAX;
+	float bestRating = INITIAL_RATING;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		_game.action(*iter);
 		float rating;
@@ -95,6 +98,6 @@ float SpeedyBot::rate_game_flat() {
 	Rules rules;
 	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
 	if(numMoves == 0)
-		return -FLT_MAX;
+		return VERY_BAD;
 	return rating * 200 + numMoves + (rand() / (float) RAND_MAX);
 }
