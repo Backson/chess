@@ -1,5 +1,8 @@
 #include "Board.hpp"
 
+using std::shared_ptr;
+using std::make_shared;
+
 // LIFECYCLE
 
 Board::~Board() {
@@ -214,7 +217,7 @@ bool Board::isInBound(Tile tile) const {
 
 // ================================================================
 
-Board Board::factoryStandard() {
+std::shared_ptr<Board> Board::factoryStandard() {
 
 	static const Piece K = Piece{PLAYER_WHITE, TYPE_KING};
 	static const Piece Q = Piece{PLAYER_WHITE, TYPE_QUEEN};
@@ -245,10 +248,10 @@ Board Board::factoryStandard() {
 		   /* 8 */  { r,n,b,q,k,b,n,r }   /* 7 */  };
 		   /*   *     0 1 2 3 4 5 6 7      *   */
 		   /* ******************************** */
-	return Board(pieces);
+	return make_shared<Board>(pieces);
 }
 
-Board Board::factoryEmpty() {
+std::shared_ptr<Board> Board::factoryEmpty() {
 	static const Piece _ = Piece::NONE;
 	Piece pieces[BOARD_HEIGHT_DEFAULT][BOARD_WIDTH_DEFAULT] =
 		   /* ******************************** */
@@ -263,7 +266,7 @@ Board Board::factoryEmpty() {
 		   /* 8 */  { _,_,_,_,_,_,_,_ }   /* 7 */  };
 		   /*   *     0 1 2 3 4 5 6 7      *   */
 		   /* ******************************** */
-	return Board(pieces);
+	return make_shared<Board>(pieces);
 }
 
 const Tile Board::INVALID_TILE = Tile(-1, -1);

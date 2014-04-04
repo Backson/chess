@@ -4,6 +4,8 @@
 #include "Piece.hpp"
 #include "vec.hpp"
 
+#include <memory>
+
 // when sizes are omitted in construction, these default sizes are used
 // either both or none of the dimensions are omitted
 static const int BOARD_WIDTH_DEFAULT  = 8;
@@ -58,8 +60,8 @@ public:
 	void movePiece(Tile src, Tile dst);
 
 	// MISC
-	static Board factoryStandard();
-	static Board factoryEmpty();
+	static std::shared_ptr<Board> factoryStandard();
+	static std::shared_ptr<Board> factoryEmpty();
 
 	static const Tile INVALID_TILE;
 
