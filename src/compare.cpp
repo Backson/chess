@@ -30,6 +30,12 @@ bool BoardCompare::operator () (const Board &lhs, const Board &rhs) const {
 }
 
 bool PositionCompare::operator () (const Position &lhs, const Position &rhs) const {
+
+	if (lhs.active_player() < rhs.active_player())
+		return true;
+	if (lhs.active_player() > rhs.active_player())
+		return false;
+
 	BoardCompare board_comp;
 	if (board_comp(lhs, rhs))
 		return true;
