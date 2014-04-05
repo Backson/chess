@@ -5,8 +5,9 @@
 
 class Bot {
 public:
-    Bot();
+    Bot() = default;
     Bot(const Situation &);
+    virtual ~Bot() = default;
 
 	void seek(int);
 	void pop();
