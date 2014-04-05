@@ -32,7 +32,7 @@ void SpeedyBot::update(Action a) {
 
 Action SpeedyBot::next_action() {
 	Action action;
-	float bestRating = rate_game(4, MINUS_INFINITY, PLUS_INFINITY, &action);
+	float bestRating = rate_game(3, MINUS_INFINITY, PLUS_INFINITY, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 
@@ -106,9 +106,7 @@ float SpeedyBot::rate_game_flat() {
 		}
 	}
 
-	//Rules rules;
-	//int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
-	//if(numMoves == 0)
-	//	return VERY_BAD;
-	return rating * 56 + pawnSum + (rand() / (float) RAND_MAX);
+	Rules rules;
+	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
+	return rating + numMoves / (64.0f * 64.0f) + pawnSum / (56.0f * 64.0f * 64.0f);
 }
