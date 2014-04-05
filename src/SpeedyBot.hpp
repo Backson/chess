@@ -18,7 +18,7 @@ public:
 	virtual Action next_action() override;
 
 private:
-	float rate_game(int, Action * = 0);
+	float rate_game(int, float, float, Action * = 0);
 	float rate_game_flat();
 };
 
