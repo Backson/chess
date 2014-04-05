@@ -6,7 +6,8 @@
 #include <time.h>
 #include <cfloat>
 
-static float INITIAL_RATING = -99999999.0f;
+static float PLUS_INFINITY = 99999999.0f;
+static float MINUS_INFINITY = -99999999.0f;
 static float VERY_BAD = -9999999.0f;
 
 SpeedyBot::SpeedyBot() :
@@ -31,30 +32,35 @@ void SpeedyBot::update(Action a) {
 
 Action SpeedyBot::next_action() {
 	Action action;
-	float bestRating = rate_game(2, &action);
+	float bestRating = rate_game(4, MINUS_INFINITY, PLUS_INFINITY, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 
 	return action;
 }
 
-float SpeedyBot::rate_game(int depth, Action *outAction) {
+float SpeedyBot::rate_game(int depth, float alpha, float beta, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
-	float bestRating = INITIAL_RATING;
+	if(rules.getAllLegalMoves(_game.current_situation()).size() == 0)
+		return VERY_BAD;
+
+	float bestRating = MINUS_INFINITY;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		_game.action(*iter);
 		float rating;
 		if (depth == 0)
 			rating = -rate_game_flat();
 		else
-			rating = -rate_game(depth - 1);
+			rating = -rate_game(depth - 1, -beta, -bestRating);
+		_game.pop();
 		if (rating > bestRating) {
 			bestRating = rating;
 			if(outAction)
 				*outAction = *iter;
+			if(rating >= beta)
+				return bestRating;
 		}
-		_game.pop();
 	}
 
 	return bestRating;
@@ -63,6 +69,7 @@ float SpeedyBot::rate_game(int depth, Action *outAction) {
 float SpeedyBot::rate_game_flat() {
 	float rating = 0;
 	const Situation &situation = _game.current_situation();
+	int pawnSum = 0;
 	for (Coord y = 0; y < situation.height(); ++y)
 	for (Coord x = 0; x < situation.width(); ++x) {
 		Piece p = situation[Tile(x,y)];
@@ -88,6 +95,10 @@ float SpeedyBot::rate_game_flat() {
 			rating += 3 * factor;
 			break;
 		case TYPE_PAWN:
+			if(p.player == PLAYER_BLACK)
+				pawnSum += (situation.width() - y - 1) * factor;
+			else
+				pawnSum += y * factor;
 			rating += factor;
 			break;
 		default:
@@ -95,9 +106,9 @@ float SpeedyBot::rate_game_flat() {
 		}
 	}
 
-	Rules rules;
-	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
-	if(numMoves == 0)
-		return VERY_BAD;
-	return rating * 200 + numMoves + (rand() / (float) RAND_MAX);
+	//Rules rules;
+	//int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
+	//if(numMoves == 0)
+	//	return VERY_BAD;
+	return rating * 56 + pawnSum + (rand() / (float) RAND_MAX);
 }
