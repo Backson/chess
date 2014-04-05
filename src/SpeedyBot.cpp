@@ -1,6 +1,7 @@
 #include "SpeedyBot.hpp"
 
 #include "Rules.hpp"
+#include "MoveCache.hpp"
 
 #include <cstdio>
 #include <time.h>
@@ -27,9 +28,19 @@ void SpeedyBot::update(Action a) {
 */
 
 Action SpeedyBot::next_action() {
+	const std::vector<Action> &actions = MoveCache::global.legal_moves(_game.current_situation());
+    printf("bot is choosing from %d moves for turn %d...\n", actions.size(), game().history().size());
+    for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
+		if (iter != actions.begin()) {
+			printf(" ");
+		}
+		Action a = *iter;
+		printf("%c%c->%c%c", 'A'+a.src[0], '1'+a.src[1], 'A'+a.dst[0], '1'+a.dst[1]);
+    }
+    printf("\n");
+
 	Action action;
     int bestRating = rate_game(2, &action);
-
 	printf("bestRating: %d\n", bestRating);
 
     return action;
@@ -37,10 +48,8 @@ Action SpeedyBot::next_action() {
 
 int SpeedyBot::rate_game(int depth, const Situation &situation, Action *outAction) {
 
-    Rules rules;
-    std::vector<Action> actions = rules.getAllLegalMoves(situation);
-    int bestRating = INT_MIN;
-    for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
+	const std::vector<Action> &actions = MoveCache::global.legal_moves(_game.current_situation());
+	float bestRating = INITIAL_RATING;    for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
     	//update(*iter);
     	Situation new_situation(situation);
     	int rating;
@@ -98,5 +107,8 @@ int SpeedyBot::rate_game_flat(const Situation &situation) {
     	}
     }
 
-	return rating;
+	int numMoves = MoveCache::global.legal_moves(_game.current_situation()).size();
+	if(numMoves == 0)
+		return VERY_BAD;
+	return rating * 200 + numMoves + (rand() / (float) RAND_MAX);
 }
