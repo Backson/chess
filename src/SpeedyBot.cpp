@@ -42,6 +42,8 @@ Action SpeedyBot::next_action() {
 float SpeedyBot::rate_game(int depth, float alpha, float beta, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
+	if(actions.size() == 0)
+		return VERY_BAD;
 	float bestRating = MINUS_INFINITY;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		_game.action(*iter);
