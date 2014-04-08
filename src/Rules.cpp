@@ -449,6 +449,7 @@ std::vector<Action> &Rules::getAllLegalMoves(const Position &position, std::vect
                 if (isActionLegal(position, a))
                     actions.push_back(a);
             } // check all eight king positions
+            break;
         }
 
         case TYPE_QUEEN:
@@ -502,6 +503,7 @@ std::vector<Action> &Rules::getAllLegalMoves(const Position &position, std::vect
                 if (isActionLegal(position, a))
                     actions.push_back(a);
             } // check all eight knight positions
+            break;
         }
         case TYPE_PAWN: {
             static const Coord sx[]    =  { 0, -1, +1};
