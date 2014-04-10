@@ -61,6 +61,7 @@ private:
 	int64 _us_counter = 0;
 
 	Tile _selection = Tile(-1, -1);
+	Type _promo_selection = TYPE_QUEEN;
 
 	bool _panic = nullptr;
 };
@@ -335,25 +336,44 @@ void Main::handleClickEvent(int x, int y) {
 	// which tile was clicked?
 	Tile tile = _view->getTileAt(x, y);
 
-	// click outside the board
-	if (!situation.isInBound(tile)) {
-		_selection = situation.INVALID_TILE;
+	// click on the board
+	if (situation.isInBound(tile)) {
+		// clicked already selected piece
+		if (tile == _selection) {
+			_selection = situation.INVALID_TILE;
+		}
+
+		// clicked another self owned piece
+		else if (situation[tile].player == situation.active_player()) {
+			_selection = tile;
+		}
+
+		// clicked the second tile to make a move
+		else {
+			makeMove(_selection, tile);
+			_selection = situation.INVALID_TILE;
+		}
+
+		return;
 	}
 
-	// clicked already selected piece
-	else if (tile == _selection) {
-		_selection = situation.INVALID_TILE;
+	Type promoType = _view->getPromotionTypeAt(x, y);
+
+	// click on promotion selector
+	if(promoType != TYPE_NONE) {
+		_promo_selection = promoType;
+		return;
 	}
 
-	// clicked another self owned piece
-	else if (situation[tile].player == situation.active_player()) {
-		_selection = tile;
-	}
+	int button = _view->getButtonAt(x, y);
 
-	// clicked the second tile to make a move
-	else {
-		makeMove(_selection, tile);
-		_selection = situation.INVALID_TILE;
+	// click on button
+	if(button != BUTTON_NONE) {
+		switch(button) {
+		default:
+			break;
+		}
+		return;
 	}
 }
 
@@ -364,7 +384,7 @@ void Main::makeMove(Tile src, Tile dst) {
 	_game->seek(_iter->index);
 
 	Rules rules;
-	Action action = rules.examineMove(situation, src, dst);
+	Action action = rules.examineMove(situation, src, dst, _promo_selection);
 	if (!rules.isActionLegal(situation, action))
 		return;
 
@@ -395,7 +415,7 @@ void Main::makeMove(Tile src, Tile dst) {
 
 void Main::drawFrame() {
 	al_set_target_backbuffer(al_get_current_display());
-	_view->draw(0.0, 0.0, _iter->situation, _selection);
+	_view->draw(0.0, 0.0, _iter->situation, _selection, _promo_selection);
 	auto bg = al_color_name("black");
 	auto fg = al_color_name("white");
 	al_draw_filled_rectangle(440, 0, 640, 490, bg);

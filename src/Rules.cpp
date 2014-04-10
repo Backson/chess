@@ -2,20 +2,26 @@
 
 #include "Position.hpp"
 
-Action Rules::examineMove(const Position &position, Tile src, Tile dst) {
+Action Rules::examineMove(const Position &position, Tile src, Tile dst, Type promoType) {
 	Player player = position.active_player();
 	Tile invalid = position.INVALID_TILE;
 
 	if (!position.isInBound(src) || !position.isInBound(dst)) {
-		return {player, DO_NOTHING, invalid, invalid, TYPE_NONE};
-	} else if (position[dst] != Piece::NONE) {
-		return {player, CAPTURE_PIECE, src, dst, TYPE_NONE};
-	} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
-		return {player, CASTLING, src, dst, TYPE_NONE};
-	} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
-		return {player, EN_PASSANT, src, dst, TYPE_NONE};
+		return {player, DO_NOTHING, invalid, invalid, promoType};
 	} else {
-		return {player, MOVE_PIECE, src, dst, TYPE_NONE};
+		Coord end_row = player == PLAYER_WHITE ? position.width() - 1 : 0;
+		if (position[src].type != TYPE_PAWN || dst[1] != end_row)
+			promoType = TYPE_NONE;
+
+		if (position[dst] != Piece::NONE) {
+			return {player, CAPTURE_PIECE, src, dst, promoType};
+		} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
+			return {player, CASTLING, src, dst, promoType};
+		} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
+			return {player, EN_PASSANT, src, dst, promoType};
+		} else {
+			return {player, MOVE_PIECE, src, dst, promoType};
+		}
 	}
 }
 
