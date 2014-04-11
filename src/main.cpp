@@ -349,7 +349,7 @@ void Main::handleClickEvent(int x, int y) {
 		}
 
 		// clicked the second tile to make a move
-		else {
+		else if (_selection != Board::INVALID_TILE){
 			makeMove(_selection, tile);
 			_selection = situation.INVALID_TILE;
 		}
