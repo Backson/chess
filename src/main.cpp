@@ -15,6 +15,7 @@
 #include "Rules.hpp"
 #include "SpeedyBot.hpp"
 #include "RandomBot.hpp"
+#include "PieceSelector.hpp"
 
 using std::shared_ptr;
 using std::move;
@@ -41,6 +42,7 @@ private:
 	void handleClickEvent(int x, int y);
 
 	void makeMove(Tile src, Tile dst);
+	void makeMove(Action action);
 
 	void drawFrame();
 
@@ -52,6 +54,7 @@ private:
 	Game *_game = nullptr;
 	Game::HistoryConstIter _iter;
 	View *_view = nullptr;
+	PieceSelector *_piece_selector = nullptr;
 
 	Bot *_bot = nullptr;
 
@@ -61,6 +64,7 @@ private:
 	int64 _us_counter = 0;
 
 	Tile _selection = Tile(-1, -1);
+	Tile _selection2 = Tile(-1, -1);
 
 	bool _panic = nullptr;
 };
@@ -82,6 +86,10 @@ Main::~Main() {
 	if (_view) {
 		delete _view;
 		_view = nullptr;
+	}
+	if (_piece_selector) {
+		delete _piece_selector;
+		_piece_selector = nullptr;
 	}
 	if (_game) {
 		delete _game;
@@ -162,12 +170,30 @@ void Main::startSystems() {
 }
 
 void Main::createWindow() {
+	{
+		ALLEGRO_BITMAP *font_bmp = al_load_bitmap("font2.tga");
+		if (!font_bmp) {
+			_panic = true;
+			return;
+		}
+
+		int ranges[] = {
+			0x0020, 0x007E, /* ASCII */
+			0x00A1, 0x00FF, /* Latin 1 */
+			0x0100, 0x017F, /* Extended-A */
+			0x0370, 0x03DF, /* Greek */
+			0x20AC, 0x20AC, /* Euro */
+		};
+		_font = al_grab_font_from_bitmap(font_bmp, 5, ranges);
+		al_destroy_bitmap(font_bmp);
+	}
+	/*
 	_font = al_load_font("Bevan.ttf", -32, ALLEGRO_TTF_MONOCHROME);
 	if (!_font) {
 		_panic = true;
 		return;
 	}
-
+	*/
 	_timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
 	if (!_timer) {
 		_panic = true;
@@ -191,7 +217,7 @@ void Main::createWindow() {
 		const Situation &current = _game->current_situation();
 		auto w = current.width();
 		auto h = current.height();
-		_view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
+		_view = new View(w, h, WHITE_AT_THE_BOTTOM, 30);
 	}
 
 	// init display
@@ -206,6 +232,8 @@ void Main::createWindow() {
 			return;
 		}
 	}
+
+	_piece_selector = new PieceSelector(460, 20);
 
 	// show system mouse cursor
 	if (!al_show_mouse_cursor(_display)) {
@@ -318,56 +346,107 @@ void Main::handleKeyEvent(int key) {
 		}
 
 		case ALLEGRO_KEY_B:
-			if (_iter->index > 0)
+			if (_iter->index > 0) {
+				_selection = Board::INVALID_TILE;
+				_selection2 = Board::INVALID_TILE;
+				_piece_selector->disableAll();
 				--_iter;
+			}
 			break;
 
 		case ALLEGRO_KEY_N:
-			if (_iter->index < (int)_game->history().size() - 1)
+			if (_iter->index < (int)_game->history().size() - 1) {
+				_selection = Board::INVALID_TILE;
+				_selection2 = Board::INVALID_TILE;
+				_piece_selector->disableAll();
 				++_iter;
+			}
 			break;
 	} // switch
 }
 
 void Main::handleClickEvent(int x, int y) {
 	const Situation &situation = _iter->situation;
+	Player player = situation.active_player();
 
 	// which tile was clicked?
 	Tile tile = _view->getTileAt(x, y);
 
 	// click outside the board
-	if (!situation.isInBound(tile)) {
-		_selection = situation.INVALID_TILE;
+	if (situation.isInBound(tile)) {
+
+		// clicked already selected piece
+		if (tile == _selection) {
+			_selection = situation.INVALID_TILE;
+			_selection2 = situation.INVALID_TILE;
+			_piece_selector->disableAll();
+		}
+
+		// clicked another self owned piece
+		else if (situation[tile].player == player) {
+			_selection = tile;
+			_selection2 = situation.INVALID_TILE;
+			_piece_selector->disableAll();
+		}
+
+		// make move, if legal
+		else if (situation.isInBound(_selection)) {
+			makeMove(_selection, tile);
+		}
 	}
 
-	// clicked already selected piece
-	else if (tile == _selection) {
-		_selection = situation.INVALID_TILE;
-	}
+	// check piece selector
+	tile = _piece_selector->getTileAt(x, y);
+	if (tile != Board::INVALID_TILE) {
+		Player player = static_cast<Player>(tile[0]);
+		Type type = static_cast<Type>(tile[1]);
+		Piece piece{player, type};
 
-	// clicked another self owned piece
-	else if (situation[tile].player == situation.active_player()) {
-		_selection = tile;
-	}
-
-	// clicked the second tile to make a move
-	else {
-		makeMove(_selection, tile);
-		_selection = situation.INVALID_TILE;
+		if (_piece_selector->is_enabled(piece)) {
+			Rules rules;
+			Action action = rules.examineMove(situation, _selection, _selection2);
+			action.promotion = piece.type;
+			makeMove(action);
+		}
 	}
 }
 
 void Main::makeMove(Tile src, Tile dst) {
 	const Situation &situation = _iter->situation;
+	Player player = situation.active_player();
+	Coord endrow = player == PLAYER_WHITE ? situation.height() - 1 : 0;
 
 	// forget all moves made after the current one
 	_game->seek(_iter->index);
 
 	Rules rules;
 	Action action = rules.examineMove(situation, src, dst);
+
+	// possible promotion move?
+	if (
+		situation[action.src].type == TYPE_PAWN &&
+		action.dst[1] == endrow
+	) {
+		action.promotion = TYPE_QUEEN;
+
+		if (!rules.isActionLegal(situation, action))
+			return;
+
+		_selection2 = action.dst;
+		_piece_selector->enable(Piece{player, TYPE_QUEEN});
+		_piece_selector->enable(Piece{player, TYPE_ROOK});
+		_piece_selector->enable(Piece{player, TYPE_KNIGHT});
+		_piece_selector->enable(Piece{player, TYPE_BISHOP});
+		return;
+	}
+
 	if (!rules.isActionLegal(situation, action))
 		return;
 
+	makeMove(action);
+}
+
+void Main::makeMove(Action action) {
 	_game->action(action);
 	printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
 	printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
@@ -375,9 +454,14 @@ void Main::makeMove(Tile src, Tile dst) {
 	printf(" id:%d", action.type);
 	printf(" (promote to %d)\n", action.promotion);
 
+	_selection = Board::INVALID_TILE;
+	_selection2 = Board::INVALID_TILE;
+	_piece_selector->disableAll();
+
 	_bot->update(action);
 	action = _bot->next_action();
 
+	Rules rules;
 	if (!rules.isActionLegal(_game->current_situation(), action))
 		printf("bot is retarded.\n");
 
@@ -394,19 +478,39 @@ void Main::makeMove(Tile src, Tile dst) {
 }
 
 void Main::drawFrame() {
+	const Situation &situation = _iter->situation;
+	Player player = situation.active_player();
+
 	al_set_target_backbuffer(al_get_current_display());
-	_view->draw(0.0, 0.0, _iter->situation, _selection);
+
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+	Tile cursor = _view->getTileAt(mouse.x, mouse.y);
+	bool has_selection = _selection != Board::INVALID_TILE;
+	bool has_selection2 = _selection2 != Board::INVALID_TILE;
+	bool is_current_player = cursor != Board::INVALID_TILE && situation[cursor].player == player;
+	if (!(has_selection || is_current_player) || has_selection2) {
+		cursor = Board::INVALID_TILE;
+	}
+
+	_view->draw(0.0, 0.0, _iter->situation, _selection, cursor);
+	_piece_selector->draw();
+
 	auto bg = al_color_name("black");
 	auto fg = al_color_name("white");
-	al_draw_filled_rectangle(440, 0, 640, 490, bg);
+	al_draw_filled_rectangle(560, 0, 640, 490, bg);
 	int lineno = 0;
 	int file = _iter->situation.en_passant_file();
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "fps: %3d\n", _fps);
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "en passant:\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", file);
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "turn:\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", _iter->index);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "fps: %3d", _fps);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "e.p.:");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "%d", file);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "turn:");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "%d", _iter->index);
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "ͰͱͲͳʹ͵Ͷͷ͸͹ͺͻͼͽ;Ϳ");
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "@µßöäü°^ŽͻψΏϟ€€€");
 	al_flip_display();
 	++_fps_counter;
 }

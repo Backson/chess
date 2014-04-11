@@ -2,6 +2,7 @@
 #define VIEW_HPP
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
 
 #include "Position.hpp"
 
@@ -30,10 +31,10 @@ public:
 		Orientation orientation, float border_size);
 	~View();
 
-	void draw(float x, float y, const Position &position, Tile selection);
+	void draw(float x, float y, const Position &position, Tile selection, Tile cursor);
 
 private:
-    void updateBuffer(const Position &position, Tile selection);
+    void updateBuffer(const Position &position, Tile selection, Tile cursor);
 
 	void drawPanel(float x, float y, const Position &position, Tile selection);
 	void drawBorder(float x, float y);
@@ -89,6 +90,8 @@ private:
 
 	/// draw all the frames here (dirty rect) and blit this to target
 	ALLEGRO_BITMAP* _buffer;
+
+	ALLEGRO_FONT *_font = nullptr;
 
 	/// size of a single tile in pixels (only square tiles)
 	static const float _tile_size;
