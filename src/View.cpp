@@ -43,14 +43,14 @@ View::~View() {
 	al_destroy_bitmap(_buffer);
 }
 
-void View::draw(float x, float y, const Position &position, Tile selection) {
+void View::draw(float x, float y, const Position &position, Tile selection, Type promoSelection) {
 	ALLEGRO_BITMAP *target = al_get_target_bitmap();
-	updateBuffer(position, selection);
+	updateBuffer(position, selection, promoSelection);
 	al_set_target_bitmap(target);
 	al_draw_bitmap(_buffer, x, y, 0);
 }
 
-void View::updateBuffer(const Position &position, Tile selection) {
+void View::updateBuffer(const Position &position, Tile selection, Type promoSelection) {
 	al_set_target_bitmap(_buffer);
 
 	ALLEGRO_MOUSE_STATE mouse;
@@ -106,6 +106,8 @@ void View::updateBuffer(const Position &position, Tile selection) {
 	_position = position;
 	_selection = selection;
 	_cursor = cursor;
+
+	// TODO draw promotion selector and buttons
 }
 
 void View::drawPanel(float x, float y, const Position &position, Tile selection) {
@@ -201,6 +203,14 @@ void View::drawCursor(float x, float y) {
 	auto x2 = x + l - d * 0.5;
 	auto y2 = y + l - d * 0.5;
 	al_draw_rectangle(x1, y1, x2, y2, color, d);
+}
+
+void View::drawPromotionSelector(float x, float y) {
+	// TODO implement
+}
+
+void View::drawButtons() {
+	// TODO implement
 }
 
 float View::getBorderSizePixels() const {
@@ -322,6 +332,16 @@ Tile View::getTileAt(float x, float y) {
 	Tile displayed = Tile((int8)(dx / tile_size), (int8)(dy / tile_size));
 	Tile algebraic = convertDisplayedToAlgebraic(displayed);
 	return algebraic;
+}
+
+Type View::getPromotionTypeAt(float x, float y) {
+	// TODO implement
+	return TYPE_QUEEN;
+}
+
+int View::getButtonAt(float x, float y) {
+	// TODO implement
+	return BUTTON_NONE;
 }
 
 int View::initialize() {

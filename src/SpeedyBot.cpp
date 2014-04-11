@@ -32,27 +32,26 @@ void SpeedyBot::update(Action a) {
 
 Action SpeedyBot::next_action() {
 	Action action;
-	float bestRating = rate_game(4, MINUS_INFINITY, PLUS_INFINITY, &action);
+	float bestRating = rate_game(0, MINUS_INFINITY, PLUS_INFINITY, 0, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 
 	return action;
 }
 
-float SpeedyBot::rate_game(int depth, float alpha, float beta, Action *outAction) {
+float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
-	if(rules.getAllLegalMoves(_game.current_situation()).size() == 0)
-		return VERY_BAD;
-
+	if(actions.size() == 0)
+		return VERY_BAD + dist;
 	float bestRating = MINUS_INFINITY;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		_game.action(*iter);
 		float rating;
 		if (depth == 0)
-			rating = -rate_game_flat();
+			rating = -rate_game_flat(dist + 1);
 		else
-			rating = -rate_game(depth - 1, -beta, -bestRating);
+			rating = -rate_game(depth - 1, -beta, dist + 1, -bestRating);
 		_game.pop();
 		if (rating > bestRating) {
 			bestRating = rating;
@@ -66,7 +65,7 @@ float SpeedyBot::rate_game(int depth, float alpha, float beta, Action *outAction
 	return bestRating;
 }
 
-float SpeedyBot::rate_game_flat() {
+float SpeedyBot::rate_game_flat(int dist) {
 	float rating = 0;
 	const Situation &situation = _game.current_situation();
 	int pawnSum = 0;
@@ -106,9 +105,9 @@ float SpeedyBot::rate_game_flat() {
 		}
 	}
 
-	//Rules rules;
-	//int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
-	//if(numMoves == 0)
-	//	return VERY_BAD;
-	return rating * 56 + pawnSum + (rand() / (float) RAND_MAX);
+	Rules rules;
+	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
+	if(numMoves == 0)
+		return VERY_BAD + dist;
+	return rating + numMoves / (64.0f * 64.0f) + pawnSum / (56.0f * 64.0f * 64.0f);
 }

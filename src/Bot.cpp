@@ -1,11 +1,5 @@
 #include "Bot.hpp"
 
-Bot::Bot() :
-    _game()
-{
-    // nothing
-}
-
 Bot::Bot(const Situation &situation) :
     _game(situation)
 {

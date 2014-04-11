@@ -78,6 +78,8 @@
 		<Unit filename="src/Bot.hpp" />
 		<Unit filename="src/Game.cpp" />
 		<Unit filename="src/Game.hpp" />
+		<Unit filename="src/MoveCache.cpp" />
+		<Unit filename="src/MoveCache.hpp" />
 		<Unit filename="src/Piece.cpp" />
 		<Unit filename="src/Piece.hpp" />
 		<Unit filename="src/Position.cpp" />

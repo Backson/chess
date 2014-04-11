@@ -19,6 +19,10 @@ enum Orientation {
 	WHITE_ON_THE_RIGHT,
 };
 
+enum Button {
+	BUTTON_NONE,
+};
+
 bool isSideway(Orientation);
 
 class View
@@ -30,10 +34,10 @@ public:
 		Orientation orientation, float border_size);
 	~View();
 
-	void draw(float x, float y, const Position &position, Tile selection);
+	void draw(float x, float y, const Position &position, Tile selection, Type promoSelection);
 
 private:
-    void updateBuffer(const Position &position, Tile selection);
+    void updateBuffer(const Position &position, Tile selection, Type promoSelection);
 
 	void drawPanel(float x, float y, const Position &position, Tile selection);
 	void drawBorder(float x, float y);
@@ -42,6 +46,8 @@ private:
 	void drawPiece(float x, float y, const Piece &piece, int whichTile);
 	void drawSelection(float x, float y);
 	void drawCursor(float x, float y);
+	void drawPromotionSelector(float x, float y);
+	void drawButtons();
 
 public:
 	float getBorderSizePixels() const;
@@ -61,6 +67,8 @@ public:
 	Tile convertDisplayedToAlgebraic(Tile) const;
 
 	Tile getTileAt(float x, float y);
+	Type getPromotionTypeAt(float x, float y);
+	int getButtonAt(float x, float y);
 
 	static int initialize();
 	static void deinitialize();
