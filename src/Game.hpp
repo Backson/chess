@@ -37,7 +37,7 @@ public:
 	const std::list<HistoryEntry> &history() const;
 
 	// OPERATION
-	void action(const Action &action);
+	void action(const Action &action, Delta *delta = nullptr);
 	void seek(int number);
 	void pop();
 

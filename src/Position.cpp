@@ -89,16 +89,28 @@ bool &Position::can_castle(Player player, CastlingType type) {
 
 // OPERATIONS
 
-void Position::action(const Action &a) {
+void Position::action(const Action &a, Delta *delta) {
 	const Player opponent = static_cast<Player>(1 - _active_player);
+
+	if (delta) {
+		delta->castling_xor = 0;
+	}
 
 	// check for king moves
 	if (piece(a.src).type == TYPE_KING) {
+		if (delta) {
+			int shift = a.player == PLAYER_WHITE ? 0 : 2;
+			bool kingside = _can_castle[a.player][KINGSIDE];
+			bool queenside = _can_castle[a.player][QUEENSIDE];
+			delta->castling_xor |= ((kingside ? 1 : 0) << (shift + KINGSIDE));
+			delta->castling_xor |= ((queenside ? 1 : 0) << (shift + QUEENSIDE));
+		}
 		_can_castle[a.player][KINGSIDE] = false;
 		_can_castle[a.player][QUEENSIDE] = false;
 	}
 
 	// set the en passant chance
+	Coord old_en_passant_file = _en_passant_file;
 	_en_passant_file = -1;
 	if (piece(a.src).type == TYPE_PAWN && (a.dst - a.src).norm2() == 4) {
 		Tile left = a.dst + Tile(-1, 0);
@@ -110,18 +122,44 @@ void Position::action(const Action &a) {
 			_en_passant_file = a.dst[0];
 		}
 	}
+	if (delta) {
+		delta->en_passant_xor = old_en_passant_file ^ _en_passant_file;
+	}
 
 	// check for rook moves
 	for (int player = 0; player < 2; ++player)
-		for (int castling = 0; castling < 2; ++castling) {
-			Coord x = castling == KINGSIDE ? width() - 1 : 0;
-			Coord y = player == PLAYER_WHITE ? 0 : height() - 1;
-			if (a.src == Tile(x, y) || a.dst == Tile(x, y))
-				_can_castle[player][castling] = false;
+	for (int castling = 0; castling < 2; ++castling) {
+		Coord x = castling == KINGSIDE ? width() - 1 : 0;
+		Coord y = player == PLAYER_WHITE ? 0 : height() - 1;
+		if (a.src == Tile(x, y) || a.dst == Tile(x, y)) {
+			if (delta) {
+				int shift = player == PLAYER_WHITE ? 0 : 2;
+				bool before = _can_castle[player][castling];
+				delta->castling_xor |= ((before ? 1 : 0) << (shift + castling));
+			}
+			_can_castle[player][castling] = false;
 		}
+	}
+
+	if (delta) {
+		delta->tiles[0] = TileDelta{a.src, piece(a.src) ^ Piece::NONE};
+	}
 
 	// actually move the piece
-	movePiece(a.src, a.dst);
+	if (a.promotion != TYPE_NONE) {
+		// promotions
+		removePiece(a.src);
+		Piece new_piece = Piece{piece(a.dst).player, a.promotion};
+		if (delta)
+			delta->tiles[1] = TileDelta{a.dst, piece(a.dst) ^ new_piece};
+		piece(a.dst) = new_piece;
+	} else {
+		// all other moves
+		if (delta) {
+			delta->tiles[1] = TileDelta{a.dst, piece(a.src) ^ piece(a.dst)};
+		}
+		movePiece(a.src, a.dst);
+	}
 
 	// move the rook (castlings only)
 	if (a.type == CASTLING) {
@@ -130,18 +168,45 @@ void Position::action(const Action &a) {
 		Tile rook_src = Tile(sx > 0 ? width() - 1 : 0, home_row);
 		Tile rook_dst = a.src + Tile(sx, 0);
 		movePiece(rook_src, rook_dst);
-	}
-
-	// do piece transformations
-	if (a.promotion != TYPE_NONE) {
-		piece(a.dst) = Piece{piece(a.dst).player, a.promotion};
+		if (delta) {
+			delta->tiles[2] = TileDelta{rook_src, piece(rook_dst) ^ Piece::NONE};
+			delta->tiles[3] = TileDelta{rook_dst, piece(rook_dst) ^ Piece::NONE};
+		}
 	}
 
 	// remove pieces that were captured en passant
-	if (a.type == EN_PASSANT) {
-		removePiece(Tile(a.dst[0], a.src[1]));
+	else if (a.type == EN_PASSANT) {
+		Tile en_passant_tile = Tile(a.dst[0], a.src[1]);
+		if (delta) {
+			delta->tiles[2] = TileDelta{en_passant_tile, piece(en_passant_tile) ^ Piece::NONE};
+		}
+		removePiece(en_passant_tile);
+		if (delta)
+			delta->tiles[3] = TileDelta{Board::INVALID_TILE, Piece::NONE ^ Piece::NONE};
+	}
+
+	else if (delta){
+		delta->tiles[2] = TileDelta{Board::INVALID_TILE, Piece::NONE ^ Piece::NONE};
+		delta->tiles[3] = TileDelta{Board::INVALID_TILE, Piece::NONE ^ Piece::NONE};
 	}
 
 	// next player
 	_active_player = opponent;
+}
+
+void Position::apply(Delta delta) {
+	int i = 0;
+	Tile tile;
+	while (isInBound(tile = delta.tiles[i].tile)) {
+        piece(tile) ^= delta.tiles[i].piece_xor;
+	}
+
+	bool *can_castle = &_can_castle[0][0];
+	for (int i = 0; i < 4; ++i) {
+		can_castle[i] = (delta.castling_xor & (1 << i)) ? !can_castle[i] : can_castle[i];
+	}
+
+	_en_passant_file ^= delta.en_passant_xor;
+
+	_active_player = static_cast<Player>(1 - _active_player);
 }

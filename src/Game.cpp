@@ -34,9 +34,9 @@ const std::list<HistoryEntry> &Game::history() const {
 
 // OPERATION
 
-void Game::action(const Action &a) {
+void Game::action(const Action &a, Delta *delta) {
 	Situation situation = current_situation();
-	situation.action(a);
+	situation.action(a, delta);
 	// add to history
 	_history.push_back({situation, a, (int)_history.size()});
 	// increment position repetition counter

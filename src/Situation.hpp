@@ -25,7 +25,7 @@ public:
 	Player &winner();
 
 	// OPERATIONS
-	void action(const Action &);
+	void action(const Action &, Delta *delta = nullptr);
 
 private:
 	int _half_move_counter = 0;
