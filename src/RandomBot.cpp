@@ -60,7 +60,7 @@ Action RandomBot::next_action() {
 				DO_NOTHING, Board::INVALID_TILE, Board::INVALID_TILE, TYPE_NONE};
 	std::uniform_int_distribution<> dist(0, actions.size() - 1);
 	int index = dist(_random);
-	printf("bot is choosing from %lu moves... %d!\n", actions.size(), index);
+	printf("bot is choosing from %u moves... %d!\n", (uint) actions.size(), index);
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		if (iter != actions.begin()) {
 			printf(" ");
