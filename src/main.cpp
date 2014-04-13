@@ -425,6 +425,12 @@ void Main::makeMove(Action action) {
 	_selection = Board::INVALID_TILE;
 
 	_bot->update(action);
+
+	_iter = --_game->history().end();
+
+	updateFps();
+	drawFrame();
+
 	action = _bot->next_action();
 
 	Rules rules;
