@@ -18,8 +18,8 @@ public:
 	virtual Action next_action() override;
 
 private:
-	float rate_game(int, float, float, int, Action * = 0);
-	float rate_game_flat(int);
+	float rate_game(int, float, float, int, Position &, Action * = 0);
+	float rate_game_flat(int, const Position &);
 };
 
 #endif // SPEEDY_BOT_HPP

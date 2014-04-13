@@ -1,6 +1,7 @@
 #include "SpeedyBot.hpp"
 
 #include "Rules.hpp"
+#include "Position.hpp"
 
 #include <cstdio>
 #include <time.h>
@@ -32,27 +33,29 @@ void SpeedyBot::update(Action a) {
 
 Action SpeedyBot::next_action() {
 	Action action;
-	float bestRating = rate_game(3, MINUS_INFINITY, PLUS_INFINITY, 0, &action);
+	Position position = _game.current_situation();
+	float bestRating = rate_game(4, MINUS_INFINITY, PLUS_INFINITY, 0, position, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 
 	return action;
 }
 
-float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Action *outAction) {
+float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Position &position, Action *outAction) {
 	Rules rules;
-	std::vector<Action> actions = rules.getAllLegalMoves(_game.current_situation());
+	std::vector<Action> actions = rules.getAllLegalMoves(position);
 	if(actions.size() == 0)
 		return VERY_BAD + dist;
 	float bestRating = MINUS_INFINITY;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
-		_game.action(*iter);
+		Delta delta;
+		position.action(*iter, &delta);
 		float rating;
 		if (depth == 0)
-			rating = -rate_game_flat(dist + 1);
+			rating = -rate_game_flat(dist + 1, position);
 		else
-			rating = -rate_game(depth - 1, -beta, dist + 1, -bestRating);
-		_game.pop();
+			rating = -rate_game(depth - 1, -beta, -bestRating, dist + 1, position);
+		position.apply(delta);
 		if (rating > bestRating) {
 			bestRating = rating;
 			if(outAction)
@@ -65,19 +68,18 @@ float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Action 
 	return bestRating;
 }
 
-float SpeedyBot::rate_game_flat(int dist) {
+float SpeedyBot::rate_game_flat(int dist, const Position &position) {
 	float rating = 0;
-	const Situation &situation = _game.current_situation();
 	int pawnSum = 0;
-	for (Coord y = 0; y < situation.height(); ++y)
-	for (Coord x = 0; x < situation.width(); ++x) {
-		Piece p = situation[Tile(x,y)];
+	for (Coord y = 0; y < position.height(); ++y)
+	for (Coord x = 0; x < position.width(); ++x) {
+		Piece p = position[Tile(x,y)];
 
 		if(p.type == TYPE_NONE)
 			continue;
 
 		int factor = 1;
-		if(p.player != situation.active_player())
+		if(p.player != position.active_player())
 			factor = -1;
 
 		switch(p.type) {
@@ -95,7 +97,7 @@ float SpeedyBot::rate_game_flat(int dist) {
 			break;
 		case TYPE_PAWN:
 			if(p.player == PLAYER_BLACK)
-				pawnSum += (situation.width() - y - 1) * factor;
+				pawnSum += (position.width() - y - 1) * factor;
 			else
 				pawnSum += y * factor;
 			rating += factor;
@@ -106,7 +108,7 @@ float SpeedyBot::rate_game_flat(int dist) {
 	}
 
 	Rules rules;
-	int numMoves = rules.getAllLegalMoves(_game.current_situation()).size();
+	int numMoves = rules.getAllLegalMoves(position).size();
 	if(numMoves == 0)
 		return VERY_BAD + dist;
 	return rating + numMoves / (64.0f * 64.0f) + pawnSum / (56.0f * 64.0f * 64.0f);

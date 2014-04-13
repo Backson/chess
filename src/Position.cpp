@@ -151,7 +151,7 @@ void Position::action(const Action &a, Delta *delta) {
 	if (a.promotion != TYPE_NONE) {
 		// promotions
 		removePiece(a.src);
-		Piece new_piece = Piece{piece(a.dst).player, a.promotion};
+		Piece new_piece = Piece{a.player, a.promotion};
 		if (delta)
 			delta->tiles[1] = TileDelta{a.dst, piece(a.dst) ^ new_piece};
 		piece(a.dst) = new_piece;
@@ -200,7 +200,7 @@ void Position::apply(Delta delta) {
 	int i = 0;
 	Tile tile;
 	while (isInBound(tile = delta.tiles[i].tile)) {
-        piece(tile) ^= delta.tiles[i].piece_xor;
+        piece(tile) ^= delta.tiles[i++].piece_xor;
 	}
 
 	bool *can_castle = &_can_castle[0][0];

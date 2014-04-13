@@ -9,18 +9,19 @@ Action Rules::examineMove(const Position &position, Tile src, Tile dst, Type pro
 	if (!position.isInBound(src) || !position.isInBound(dst)) {
 		return {player, DO_NOTHING, invalid, invalid, promoType};
 	} else {
-		Coord end_row = player == PLAYER_WHITE ? position.width() - 1 : 0;
-		if (position[src].type != TYPE_PAWN || dst[1] != end_row)
-			promoType = TYPE_NONE;
 
 		if (position[dst] != Piece::NONE) {
-			return {player, CAPTURE_PIECE, src, dst, promoType};
+			return {player, CAPTURE_PIECE, src, dst, TYPE_NONE};
 		} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
-			return {player, CASTLING, src, dst, promoType};
+			return {player, CASTLING, src, dst, TYPE_NONE};
 		} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
-			return {player, EN_PASSANT, src, dst, promoType};
+			return {player, EN_PASSANT, src, dst, TYPE_NONE};
 		} else {
-			return {player, MOVE_PIECE, src, dst, promoType};
+			Coord end_row = player == PLAYER_WHITE ? position.width() - 1 : 0;
+			if (position[src].type != TYPE_PAWN || dst[1] != end_row)
+				return {player, MOVE_PIECE, src, dst, TYPE_NONE};
+			else
+				return {player, MOVE_PIECE, src, dst, promoType};
 		}
 	}
 }
