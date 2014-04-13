@@ -31,36 +31,53 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 	_last_orientation(WHITE_AT_THE_BOTTOM),
 	_selection(-1, -1),
 	_cursor(-1, -1),
+	_promo_selection(TYPE_NONE),
+	_promo_cursor(TYPE_NONE),
 
 	_buffer(nullptr)
 {
 	_buffer = al_create_bitmap(getPanelWidthPixels(), getPanelHeightPixels());
+
+	{
+		ALLEGRO_BITMAP *font_bmp = al_load_bitmap("font2.tga");
+		if (!font_bmp)
+			return;
+
+		int ranges[] = {
+			0x0020, 0x007E, /* ASCII */
+			0x00A1, 0x00FF, /* Latin 1 */
+			0x0100, 0x017F, /* Extended-A */
+			0x0370, 0x03DF, /* Greek */
+			0x20AC, 0x20AC, /* Euro */
+		};
+		_font = al_grab_font_from_bitmap(font_bmp, 5, ranges);
+		al_destroy_bitmap(font_bmp);
+	}
+
 	al_set_target_bitmap(_buffer);
 	drawPanel(0.0, 0.0, _position, _selection);
 }
 
 View::~View() {
-	al_destroy_bitmap(_buffer);
+	al_destroy_font(_font);
+	if (_font)
+		al_destroy_bitmap(_buffer);
 }
 
-void View::draw(float x, float y, const Position &position, Tile selection, Type promoSelection) {
+void View::draw(float x, float y, const Position &position, Tile selection, Tile cursor, Type promoCursor, Type promoSelection) {
 	ALLEGRO_BITMAP *target = al_get_target_bitmap();
-	updateBuffer(position, selection, promoSelection);
+	updateBuffer(position, selection, cursor, promoCursor, promoSelection);
 	al_set_target_bitmap(target);
 	al_draw_bitmap(_buffer, x, y, 0);
 }
 
-void View::updateBuffer(const Position &position, Tile selection, Type promoSelection) {
+void View::updateBuffer(const Position &position, Tile selection, Tile cursor, Type promoCursor, Type promoSelection) {
 	al_set_target_bitmap(_buffer);
-
-	ALLEGRO_MOUSE_STATE mouse;
-	al_get_mouse_state(&mouse);
-	Tile cursor = getTileAt(mouse.x, mouse.y);
 
 	int counter = 0;
 
-	for (int8 yy = 0; yy < _board_height; ++yy)
-		for (int8 xx = 0; xx < _board_width; ++xx)
+	for (Coord yy = 0; yy < _board_height; ++yy)
+		for (Coord xx = 0; xx < _board_width; ++xx)
 		{
 			Tile algebraic = Tile(xx, yy);
 
@@ -146,7 +163,47 @@ void View::drawBorder(float x, float y) {
 }
 
 void View::drawBorderDecoration(float x, float y) {
-	// TODO implement
+	if (!_font)
+		return;
+
+	int h = al_get_font_line_height(_font);
+
+	char buffer[2] = " ";
+	char &c = buffer[0];
+
+	for (Coord y = 0; y < _board_height; ++y) {
+		float yy = _border_size + y * _tile_size + (_tile_size - h) / 2.0;
+		c = '8' - y;
+		al_draw_text(
+			_font,
+			al_color_name("white"),
+			_border_size * 0.75, yy,
+			ALLEGRO_ALIGN_CENTER, buffer
+		);
+		al_draw_text(
+			_font,
+			al_color_name("white"),
+			getPanelWidthPixels() - _border_size * 0.75, yy,
+			ALLEGRO_ALIGN_CENTER, buffer
+		);
+	}
+
+	for (Coord x = 0; x < _board_height; ++x) {
+		float xx = _border_size + (x + 0.5) * _tile_size;
+		c = 'A' + x;
+		al_draw_text(
+			_font,
+			al_color_name("white"),
+			xx, (_border_size - h) * 0.75,
+			ALLEGRO_ALIGN_CENTER, buffer
+		);
+		al_draw_text(
+			_font,
+			al_color_name("white"),
+			xx, getPanelHeightPixels() - _border_size + (_border_size - h) * 0.25,
+			ALLEGRO_ALIGN_CENTER, buffer
+		);
+	}
 }
 
 void View::drawBoard(float x, float y, const Position &position, Tile selection) {
@@ -154,8 +211,8 @@ void View::drawBoard(float x, float y, const Position &position, Tile selection)
 	al_get_mouse_state(&mouse);
 	Tile cursor = getTileAt(mouse.x, mouse.y);
 
-	for (int8 yy = 0; yy < position.height(); ++yy)
-		for (int8 xx = 0; xx < position.width(); ++xx)
+	for (Coord yy = 0; yy < position.height(); ++yy)
+		for (Coord xx = 0; xx < position.width(); ++xx)
 		{
 			Tile algebraic = Tile(xx, yy);
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
@@ -261,23 +318,23 @@ Tile View::convertAlgebraicToDisplayed(Tile algebraic) const {
 	switch (_orientation)
 	{
 		case WHITE_AT_THE_BOTTOM: {
-			int8 y = _board_height - algebraic[1] - 1;
-			int8 x = algebraic[0];
+			Coord y = _board_height - algebraic[1] - 1;
+			Coord x = algebraic[0];
 			return Tile(x, y);
 		}
 		case WHITE_ON_TOP: {
-			int8 y = algebraic[1];
-			int8 x = _board_width - algebraic[0] - 1;
+			Coord y = algebraic[1];
+			Coord x = _board_width - algebraic[0] - 1;
 			return Tile(x, y);
 		}
 		case WHITE_ON_THE_LEFT: {
-			int8 y = algebraic[0];
-			int8 x = algebraic[1];
+			Coord y = algebraic[0];
+			Coord x = algebraic[1];
 			return Tile(x, y);
 		}
 		case WHITE_ON_THE_RIGHT: {
-			int8 y = _board_width - algebraic[0] - 1;
-			int8 x = _board_height - algebraic[1] - 1;
+			Coord y = _board_width - algebraic[0] - 1;
+			Coord x = _board_height - algebraic[1] - 1;
 			return Tile(x, y);
 		}
 		default:
@@ -289,18 +346,18 @@ Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
 	switch (_orientation)
 	{
 		case WHITE_AT_THE_BOTTOM: {
-			int8 y = _board_height - displayed[1] - 1;
-			int8 x = displayed[0];
+			Coord y = _board_height - displayed[1] - 1;
+			Coord x = displayed[0];
 			return Tile(x, y);
 		}
 		case WHITE_ON_TOP: {
-			int8 y = displayed[1];
-			int8 x = _board_width - displayed[0] - 1;
+			Coord y = displayed[1];
+			Coord x = _board_width - displayed[0] - 1;
 			return Tile(x, y);
 		}
 		case WHITE_ON_THE_LEFT: {
-			int8 y = displayed[0];
-			int8 x = displayed[1];
+			Coord y = displayed[0];
+			Coord x = displayed[1];
 			return Tile(x, y);
 		}
 		case WHITE_ON_THE_RIGHT: {
@@ -309,8 +366,8 @@ Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
 			 * coordinate transformation is a rotation and a translation
 			 * and both operations have to switch orders when tranforming back.
 			 */
-			int8 y = _board_height - displayed[0] - 1;
-			int8 x = _board_width - displayed[1] - 1;
+			Coord y = _board_height - displayed[0] - 1;
+			Coord x = _board_width - displayed[1] - 1;
 			return Tile(x, y);
 		}
 		default:
@@ -325,11 +382,11 @@ Tile View::getTileAt(float x, float y) {
 	if (dx >= getBoardWidthPixels() || dx < 0
 		|| dy >= getBoardHeightPixels() || dy < 0)
 	{
-		return Tile((int8)-1, (int8)-1);
+		return Tile(-1, -1);
 	}
 
 	auto tile_size = getTileSizePixels();
-	Tile displayed = Tile((int8)(dx / tile_size), (int8)(dy / tile_size));
+	Tile displayed = Tile(dx / tile_size, dy / tile_size);
 	Tile algebraic = convertDisplayedToAlgebraic(displayed);
 	return algebraic;
 }

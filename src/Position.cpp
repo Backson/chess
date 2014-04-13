@@ -159,18 +159,3 @@ void Position::action(const Action &a) {
 	_active_player = opponent;
 	_hash_value ^= zobrist_player();
 }
-
-// HASH
-
-void Position::hash() const {
-	Board::hash();
-	_hash_value ^= zobrist_file(en_passant_file());
-	if(can_castle(PLAYER_WHITE, KINGSIDE))
-		_hash_value ^= zobrist_castling(PLAYER_WHITE, KINGSIDE);
-	if(can_castle(PLAYER_WHITE, QUEENSIDE))
-		_hash_value ^= zobrist_castling(PLAYER_WHITE, QUEENSIDE);
-	if(can_castle(PLAYER_BLACK, KINGSIDE))
-		_hash_value ^= zobrist_castling(PLAYER_BLACK, KINGSIDE);
-	if(can_castle(PLAYER_BLACK, QUEENSIDE))
-		_hash_value ^= zobrist_castling(PLAYER_BLACK, QUEENSIDE);
-}

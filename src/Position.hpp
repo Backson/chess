@@ -34,9 +34,6 @@ public:
 	// OPERATIONS
 	void action(const Action &action);
 
-protected:
-	virtual void hash() const;
-
 private:
 	Player _active_player = PLAYER_NONE;
 	Coord _en_passant_file = -1;

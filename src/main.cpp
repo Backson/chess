@@ -41,6 +41,7 @@ private:
 	void handleClickEvent(int x, int y);
 
 	void makeMove(Tile src, Tile dst);
+	void makeMove(Action action);
 
 	void drawFrame();
 
@@ -163,12 +164,30 @@ void Main::startSystems() {
 }
 
 void Main::createWindow() {
+	{
+		ALLEGRO_BITMAP *font_bmp = al_load_bitmap("font2.tga");
+		if (!font_bmp) {
+			_panic = true;
+			return;
+		}
+
+		int ranges[] = {
+			0x0020, 0x007E, /* ASCII */
+			0x00A1, 0x00FF, /* Latin 1 */
+			0x0100, 0x017F, /* Extended-A */
+			0x0370, 0x03DF, /* Greek */
+			0x20AC, 0x20AC, /* Euro */
+		};
+		_font = al_grab_font_from_bitmap(font_bmp, 5, ranges);
+		al_destroy_bitmap(font_bmp);
+	}
+	/*
 	_font = al_load_font("Bevan.ttf", -32, ALLEGRO_TTF_MONOCHROME);
 	if (!_font) {
 		_panic = true;
 		return;
 	}
-
+	*/
 	_timer = al_create_timer(ALLEGRO_BPS_TO_SECS(TIMER_BPS));
 	if (!_timer) {
 		_panic = true;
@@ -192,7 +211,7 @@ void Main::createWindow() {
 		const Situation &current = _game->current_situation();
 		auto w = current.width();
 		auto h = current.height();
-		_view = new View(w, h, WHITE_AT_THE_BOTTOM, 20);
+		_view = new View(w, h, WHITE_AT_THE_BOTTOM, 30);
 	}
 
 	// init display
@@ -319,13 +338,17 @@ void Main::handleKeyEvent(int key) {
 		}
 
 		case ALLEGRO_KEY_B:
-			if (_iter->index > 0)
+			if (_iter->index > 0) {
+				_selection = Board::INVALID_TILE;
 				--_iter;
+			}
 			break;
 
 		case ALLEGRO_KEY_N:
-			if (_iter->index < (int)_game->history().size() - 1)
+			if (_iter->index < (int)_game->history().size() - 1) {
+				_selection = Board::INVALID_TILE;
 				++_iter;
+			}
 			break;
 	} // switch
 }
@@ -349,7 +372,7 @@ void Main::handleClickEvent(int x, int y) {
 		}
 
 		// clicked the second tile to make a move
-		else if (_selection != Board::INVALID_TILE){
+		else if (situation.isInBound(_selection)){
 			makeMove(_selection, tile);
 			_selection = situation.INVALID_TILE;
 		}
@@ -388,6 +411,10 @@ void Main::makeMove(Tile src, Tile dst) {
 	if (!rules.isActionLegal(situation, action))
 		return;
 
+	makeMove(action);
+}
+
+void Main::makeMove(Action action) {
 	_game->action(action);
 	printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
 	printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
@@ -395,9 +422,12 @@ void Main::makeMove(Tile src, Tile dst) {
 	printf(" id:%d", action.type);
 	printf(" (promote to %d)\n", action.promotion);
 
+	_selection = Board::INVALID_TILE;
+
 	_bot->update(action);
 	action = _bot->next_action();
 
+	Rules rules;
 	if (!rules.isActionLegal(_game->current_situation(), action))
 		printf("bot is retarded.\n");
 
@@ -414,19 +444,38 @@ void Main::makeMove(Tile src, Tile dst) {
 }
 
 void Main::drawFrame() {
+	const Situation &situation = _iter->situation;
+	Player player = situation.active_player();
+
 	al_set_target_backbuffer(al_get_current_display());
-	_view->draw(0.0, 0.0, _iter->situation, _selection, _promo_selection);
+
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+	Tile cursor = _view->getTileAt(mouse.x, mouse.y);
+	Type promo_cursor = _view->getPromotionTypeAt(mouse.x, mouse.y);
+	bool has_selection = _selection != Board::INVALID_TILE;
+	bool is_current_player = cursor != Board::INVALID_TILE && situation[cursor].player == player;
+	if (!has_selection && !is_current_player) {
+		cursor = Board::INVALID_TILE;
+	}
+
+	_view->draw(0.0, 0.0, _iter->situation, _selection, cursor, promo_cursor, _promo_selection);
+
 	auto bg = al_color_name("black");
 	auto fg = al_color_name("white");
-	al_draw_filled_rectangle(440, 0, 640, 490, bg);
+	al_draw_filled_rectangle(560, 0, 640, 490, bg);
 	int lineno = 0;
 	int file = _iter->situation.en_passant_file();
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "fps: %3d\n", _fps);
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "en passant:\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", file);
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "turn:\n");
-	al_draw_textf(_font, fg, 460, 20 + lineno++ * 32, 0, "%d\n", _iter->index);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "fps: %3d", _fps);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "e.p.:");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "%d", file);
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "turn:");
+	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "%d", _iter->index);
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, " ");
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "ͰͱͲͳʹ͵Ͷͷ͸͹ͺͻͼͽ;Ϳ");
+//	al_draw_textf(_font, fg, 580, 20 + lineno++ * 20, 0, "@µßöäü°^ŽͻψΏϟ€€€");
 	al_flip_display();
 	++_fps_counter;
 }

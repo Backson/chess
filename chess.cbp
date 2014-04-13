@@ -82,6 +82,8 @@
 		<Unit filename="src/MoveCache.hpp" />
 		<Unit filename="src/Piece.cpp" />
 		<Unit filename="src/Piece.hpp" />
+		<Unit filename="src/PieceSelector.cpp" />
+		<Unit filename="src/PieceSelector.hpp" />
 		<Unit filename="src/Position.cpp" />
 		<Unit filename="src/Position.hpp" />
 		<Unit filename="src/RandomBot.cpp" />

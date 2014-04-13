@@ -57,7 +57,7 @@ Action RandomBot::next_action() {
     std::vector<Action> actions = rules.getAllLegalMoves(game());
     std::uniform_int_distribution<> dist(0, actions.size() - 1);
     int index = dist(_random);
-    printf("bot is choosing from %d moves... %d!\n", actions.size(), index);
+    printf("bot is choosing from %lu moves... %d!\n", actions.size(), index);
     for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		if (iter != actions.begin()) {
 			printf(" ");
