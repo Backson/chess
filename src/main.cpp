@@ -1,6 +1,9 @@
 #include <cstdio>
 #include <memory>
 
+#include <boost/thread.hpp>
+#include <boost/atomic.hpp>
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
@@ -21,6 +24,55 @@ using std::move;
 
 static const int TIMER_BPS = 1000;
 static const int64 US_PER_TICK = 1e6 / TIMER_BPS;
+
+class BotThread {
+public:
+	BotThread();
+
+	void run(Bot *bot);
+	bool isRunning();
+	bool isDone();
+	Action getResult();
+
+private:
+	boost::thread _thread;
+	Action _action;
+	boost::atomic<bool> _done;
+	boost::atomic<bool> _running;
+};
+
+
+BotThread::BotThread() :
+	_done(false),
+	_running(false)
+{
+	// nothing
+}
+
+void BotThread::run(Bot *bot) {
+	_done = false;
+	_running = true;
+	_thread = boost::thread([&] {
+		_action = bot->next_action();
+		_done = true;
+	});
+	_thread.detach();
+}
+
+bool BotThread::isRunning() {
+	return _running;
+}
+
+bool BotThread::isDone() {
+	return _done;
+}
+
+Action BotThread::getResult() {
+	_thread.join();
+	_done = false;
+	_running = false;
+	return _action;
+}
 
 class Main {
 public:
@@ -58,6 +110,7 @@ private:
 	Bot *_white_bot = nullptr;
 	Bot *_black_bot = nullptr;
 	bool _expect_player_move = false;
+	BotThread _bot_thread;
 
 	bool _shutdown = false;
 	int _fps_counter = 0;
@@ -125,7 +178,7 @@ int Main::run() {
 
 	_white_bot = new SpeedyBot();
 	_white_bot->reset(situation);
-	_black_bot = new RandomBot();
+	_black_bot = new SpeedyBot();
 	_black_bot->reset(situation);
 	_expect_player_move = _white_bot == nullptr;
 
@@ -324,20 +377,27 @@ void Main::updateLogic() {
 	const Situation &situation = _game->current_situation();
 
 	if (!_expect_player_move) {
+
 		Bot *bot = nullptr;
 		if (situation.active_player() == PLAYER_WHITE)
 			bot = _white_bot;
 		if (situation.active_player() == PLAYER_BLACK)
 			bot = _black_bot;
 
-		if (bot) {
-			Rules rules;
-			std::vector<Action> actions = rules.getAllLegalMoves(*_game);
-			if(actions.size() == 0)
-				return;
+		Rules rules;
+		std::vector<Action> actions = rules.getAllLegalMoves(*_game);
+		if(actions.size() == 0)
+			return;
 
-			Action action = bot->next_action();
-			makeMove(action);
+		if (bot) {
+			if (_bot_thread.isRunning()) {
+				if (_bot_thread.isDone()) {
+					Action action = _bot_thread.getResult();
+					makeMove(action);
+				}
+			} else {
+				_bot_thread.run(bot);
+			}
 		}
 	}
 }

@@ -44,8 +44,11 @@
 		<Compiler>
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add directory="E:/mingw2/boost-1.55.0" />
 		</Compiler>
 		<Linker>
+			<Add option="-lboost_thread-mt-d" />
+			<Add option="-lboost_system-mt-d" />
 			<Add option="-lallegro-static" />
 			<Add option="-lallegro_color-static" />
 			<Add option="-lallegro_image-static" />
@@ -68,6 +71,7 @@
 			<Add option="-ladvapi32" />
 			<Add option="-lws2_32" />
 			<Add option="-lshlwapi" />
+			<Add directory="E:/mingw2/boost-1.55.0/stage/lib" />
 		</Linker>
 		<Unit filename="Makefile" />
 		<Unit filename="src/Action.cpp" />
