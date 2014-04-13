@@ -34,7 +34,7 @@ void SpeedyBot::update(Action a) {
 Action SpeedyBot::next_action() {
 	Action action;
 	Position position = _game.current_situation();
-	float bestRating = rate_game(4, MINUS_INFINITY, PLUS_INFINITY, 0, position, &action);
+	float bestRating = rate_game(2, MINUS_INFINITY, PLUS_INFINITY, 0, position, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 

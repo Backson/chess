@@ -55,7 +55,7 @@ void RandomBot::update(Action a) {
 Action RandomBot::next_action() {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(_game);
-	if(actions.size())
+	if (actions.size() == 0)
 		return {_game.current_situation().active_player(),
 				DO_NOTHING, Board::INVALID_TILE, Board::INVALID_TILE, TYPE_NONE};
 	std::uniform_int_distribution<> dist(0, actions.size() - 1);

@@ -36,6 +36,7 @@ private:
 
 	void loop();
 	void updateFps();
+	void updateLogic();
 	void handleEvents();
 	void handleKeyEvent(int key);
 	void handleClickEvent(int x, int y);
@@ -54,7 +55,9 @@ private:
 	Game::HistoryConstIter _iter;
 	View *_view = nullptr;
 
-	Bot *_bot = nullptr;
+	Bot *_white_bot = nullptr;
+	Bot *_black_bot = nullptr;
+	bool _expect_player_move = false;
 
 	bool _shutdown = false;
 	int _fps_counter = 0;
@@ -73,10 +76,15 @@ int main(int argc, char **argv) {
 }
 
 Main::~Main() {
-	if (_bot) {
-		delete _bot;
-		_bot = nullptr;
+	if (_white_bot) {
+		delete _white_bot;
+		_white_bot = nullptr;
 	}
+	if (_black_bot) {
+		delete _black_bot;
+		_black_bot = nullptr;
+	}
+
 	if (_font) {
 		al_destroy_font(_font);
 		_font = nullptr;
@@ -113,8 +121,13 @@ int Main::run() {
 		return -1;
 	}
 
-	_bot = new SpeedyBot();
-	_bot->reset(_game->current_situation());
+	const Situation &situation = _game->current_situation();
+
+	_white_bot = new RandomBot();
+	_white_bot->reset(situation);
+	_black_bot = new RandomBot();
+	_black_bot->reset(situation);
+	_expect_player_move = _white_bot == nullptr;
 
 	al_start_timer(_timer);
 	loop();
@@ -247,10 +260,9 @@ void Main::createWindow() {
 
 void Main::loop() {
 	while (true) {
-		handleEvents();
+		updateLogic();
 		if (_shutdown)
 			break;
-		updateFps();
 		drawFrame();
 	}
 }
@@ -304,6 +316,30 @@ void Main::handleEvents() {
 			break; // ignore everything we don't know
 		} // select event type
 	} // process all events
+}
+
+void Main::updateLogic() {
+	handleEvents();
+
+	const Situation &situation = _game->current_situation();
+
+	if (!_expect_player_move) {
+		Bot *bot = nullptr;
+		if (situation.active_player() == PLAYER_WHITE)
+			bot = _white_bot;
+		if (situation.active_player() == PLAYER_BLACK)
+			bot = _black_bot;
+
+		if (bot) {
+			Rules rules;
+			std::vector<Action> actions = rules.getAllLegalMoves(*_game);
+			if(actions.size() == 0)
+				return;
+
+			Action action = bot->next_action();
+			makeMove(action);
+		}
+	}
 }
 
 void Main::updateFps() {
@@ -360,7 +396,7 @@ void Main::handleClickEvent(int x, int y) {
 	Tile tile = _view->getTileAt(x, y);
 
 	// click on the board
-	if (situation.isInBound(tile)) {
+	if (situation.isInBound(tile) && _expect_player_move) {
 		// clicked already selected piece
 		if (tile == _selection) {
 			_selection = situation.INVALID_TILE;
@@ -383,7 +419,7 @@ void Main::handleClickEvent(int x, int y) {
 	Type promoType = _view->getPromotionTypeAt(x, y);
 
 	// click on promotion selector
-	if(promoType != TYPE_NONE) {
+	if (promoType != TYPE_NONE) {
 		_promo_selection = promoType;
 		return;
 	}
@@ -391,7 +427,7 @@ void Main::handleClickEvent(int x, int y) {
 	int button = _view->getButtonAt(x, y);
 
 	// click on button
-	if(button != BUTTON_NONE) {
+	if (button != BUTTON_NONE) {
 		switch(button) {
 		default:
 			break;
@@ -415,9 +451,8 @@ void Main::makeMove(Tile src, Tile dst) {
 }
 
 void Main::makeMove(Action action) {
-	Rules rules;
-	std::vector<Action> actions = rules.getAllLegalMoves(*_game);
-	if(actions.size() == 0)
+
+	if (action.type == DO_NOTHING)
 		return;
 
 	_game->action(action);
@@ -429,37 +464,20 @@ void Main::makeMove(Action action) {
 
 	_selection = Board::INVALID_TILE;
 
-	_bot->update(action);
+	if (_white_bot) _white_bot->update(action);
+	if (_black_bot) _black_bot->update(action);
 
 	_iter = --_game->history().end();
 
-	updateFps();
-	drawFrame();
-
-	action = _bot->next_action();
-
-	if (!rules.isActionLegal(_game->current_situation(), action))
-		printf("bot is retarded.\n");
-
-	actions = rules.getAllLegalMoves(*_game);
-	if(actions.size() == 0)
-		return;
-
-	_game->action(action);
-	printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
-	printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
-	printf("%c%c", 'A' + action.dst[0], '1' + action.dst[1]);
-	printf(" id:%d", action.type);
-	printf(" (promote to %d)\n", action.promotion);
-
-	_bot->update(action);
-
-	_iter = --_game->history().end();
+	Player player = _game->current_situation().active_player();
+	_expect_player_move = player == PLAYER_WHITE ? _white_bot == 0 : _black_bot == 0;
 }
 
 void Main::drawFrame() {
 	const Situation &situation = _iter->situation;
 	Player player = situation.active_player();
+
+	updateFps();
 
 	al_set_target_backbuffer(al_get_current_display());
 
@@ -469,7 +487,7 @@ void Main::drawFrame() {
 	Type promo_cursor = _view->getPromotionTypeAt(mouse.x, mouse.y);
 	bool has_selection = _selection != Board::INVALID_TILE;
 	bool is_current_player = cursor != Board::INVALID_TILE && situation[cursor].player == player;
-	if (!has_selection && !is_current_player) {
+	if (!_expect_player_move || (!has_selection && !is_current_player)) {
 		cursor = Board::INVALID_TILE;
 	}
 
