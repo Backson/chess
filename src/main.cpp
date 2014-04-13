@@ -415,6 +415,11 @@ void Main::makeMove(Tile src, Tile dst) {
 }
 
 void Main::makeMove(Action action) {
+	Rules rules;
+	std::vector<Action> actions = rules.getAllLegalMoves(*_game);
+	if(actions.size() == 0)
+		return;
+
 	_game->action(action);
 	printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
 	printf("%c%c -> ", 'A' + action.src[0], '1' + action.src[1]);
@@ -433,9 +438,12 @@ void Main::makeMove(Action action) {
 
 	action = _bot->next_action();
 
-	Rules rules;
 	if (!rules.isActionLegal(_game->current_situation(), action))
 		printf("bot is retarded.\n");
+
+	actions = rules.getAllLegalMoves(*_game);
+	if(actions.size() == 0)
+		return;
 
 	_game->action(action);
 	printf("%s: ", action.player == PLAYER_WHITE ? "white" : "black");
