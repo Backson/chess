@@ -123,7 +123,7 @@ int Main::run() {
 
 	const Situation &situation = _game->current_situation();
 
-	_white_bot = new RandomBot();
+	_white_bot = new SpeedyBot();
 	_white_bot->reset(situation);
 	_black_bot = new RandomBot();
 	_black_bot->reset(situation);

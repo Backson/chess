@@ -44,8 +44,12 @@ Action SpeedyBot::next_action() {
 float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Position &position, Action *outAction) {
 	Rules rules;
 	std::vector<Action> actions = rules.getAllLegalMoves(position);
-	if(actions.size() == 0)
-		return VERY_BAD + dist;
+	if(actions.size() == 0) {
+		if(rules.isPlayerInCheck(position, position.active_player()))
+			return VERY_BAD + dist;
+		else
+			return 0;
+	}
 	float bestRating = MINUS_INFINITY;
 	for (auto iter = actions.begin(); iter != actions.end(); ++iter) {
 		Delta delta;
@@ -109,7 +113,11 @@ float SpeedyBot::rate_game_flat(int dist, const Position &position) {
 
 	Rules rules;
 	int numMoves = rules.getAllLegalMoves(position).size();
-	if(numMoves == 0)
-		return VERY_BAD + dist;
+	if(numMoves == 0) {
+		if(rules.isPlayerInCheck(position, position.active_player()))
+			return VERY_BAD + dist;
+		else
+			return 0;
+	}
 	return rating + numMoves / (64.0f * 64.0f) + pawnSum / (56.0f * 64.0f * 64.0f);
 }
