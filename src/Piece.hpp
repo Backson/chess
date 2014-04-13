@@ -29,4 +29,7 @@ struct Piece {
 bool operator == (Piece lhs, Piece rhs);
 bool operator != (Piece lhs, Piece rhs);
 
+Piece &operator ^= (Piece &lhs, Piece rhs);
+Piece operator ^ (Piece lhs, Piece rhs);
+
 #endif // PIECE_HPP

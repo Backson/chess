@@ -36,7 +36,7 @@ Player &Situation::winner() {
 
 // OPERATIONS
 
-void Situation::action(const Action &a) {
+void Situation::action(const Action &a, Delta *delta) {
 	if (_has_game_ended)
 		return;
 
@@ -44,7 +44,7 @@ void Situation::action(const Action &a) {
 	bool is_capture = a.type == CAPTURE_PIECE || a.type == EN_PASSANT;
 
 	if (a.type != DO_NOTHING) {
-		Position::action(a);
+		Position::action(a, delta);
 
 		if (is_pawn || is_capture)
 			_half_move_counter = 0;

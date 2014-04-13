@@ -62,7 +62,3 @@ bool PositionCompare::operator () (const Position &lhs, const Position &rhs) con
 
 	return false;
 }
-
-uint32 PositionHash::operator () (const Position &position) const {
-	return position.hash_value();
-}

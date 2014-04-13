@@ -67,12 +67,6 @@ public:
 
 	static const Tile INVALID_TILE;
 
-protected:
-
-	mutable uint32 _hash_value = 0;
-	mutable bool _hashed = false;
-	virtual void hash() const;
-
 private:
 
 	Coord _width = BOARD_WIDTH_DEFAULT;

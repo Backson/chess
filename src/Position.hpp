@@ -4,6 +4,17 @@
 #include "Action.hpp"
 #include "Board.hpp"
 
+struct TileDelta {
+	Tile tile;
+	Piece piece_xor;
+};
+
+struct Delta {
+	TileDelta tiles[4];
+	int castling_xor;
+	Coord en_passant_xor;
+};
+
 class Position :
 	public Board
 {
@@ -32,7 +43,9 @@ public:
 	bool &can_castle(Player, CastlingType);
 
 	// OPERATIONS
-	void action(const Action &action);
+	void action(const Action &action, Delta *delta = nullptr);
+
+	void apply(Delta delta);
 
 private:
 	Player _active_player = PLAYER_NONE;

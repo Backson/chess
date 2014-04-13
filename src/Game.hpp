@@ -37,7 +37,7 @@ public:
 	const std::list<HistoryEntry> &history() const;
 
 	// OPERATION
-	void action(const Action &action);
+	void action(const Action &action, Delta *delta = nullptr);
 	void seek(int number);
 	void pop();
 
@@ -48,8 +48,8 @@ private:
 	/// contains all past positions and corresponding moves
 	std::list<HistoryEntry> _history;
 	/// track the number of times each position has occured
-	//std::map<Position, int, PositionCompare> _position_repetition;
-	std::unordered_map<Position, int, PositionHash> _position_repetition;
+	std::map<Position, int, PositionCompare> _position_repetition;
+	//std::unordered_map<Position, int, PositionHash> _position_repetition;
 };
 
 #endif // GAME_HPP

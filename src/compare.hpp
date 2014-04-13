@@ -11,8 +11,4 @@ struct PositionCompare {
 	bool operator () (const Position &, const Position &) const;
 };
 
-struct PositionHash {
-	uint32 operator () (const Position &) const;
-};
-
 #endif // COMPARE_HPP
