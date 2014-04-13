@@ -37,6 +37,7 @@ public:
 private:
 	boost::thread _thread;
 	Action _action;
+	Bot *_bot;
 	boost::atomic<bool> _done;
 	boost::atomic<bool> _running;
 };
@@ -50,10 +51,11 @@ BotThread::BotThread() :
 }
 
 void BotThread::run(Bot *bot) {
+	_bot = bot;
 	_done = false;
 	_running = true;
 	_thread = boost::thread([&] {
-		_action = bot->next_action();
+		_action = _bot->next_action();
 		_done = true;
 	});
 	_thread.detach();
