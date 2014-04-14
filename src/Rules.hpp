@@ -19,7 +19,7 @@ public:
 	 * to guess what the player probably wants and then check whether that
 	 * move is legal afterwards with isMoveLegal.
 	 */
-	Action examineMove(const Position &, Tile src, Tile dst, Type promoTyp = TYPE_QUEEN);
+	Action examineMove(const Position &, Tile src, Tile dst, Type promo_type_hint = TYPE_QUEEN);
 
 	/** Checks whether a particular move is legal by standard chess rules.
 	 */

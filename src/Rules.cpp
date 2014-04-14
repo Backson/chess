@@ -2,25 +2,33 @@
 
 #include "Position.hpp"
 
-Action Rules::examineMove(const Position &position, Tile src, Tile dst, Type promoType) {
+Action Rules::examineMove(const Position &position, Tile src, Tile dst, Type promo_type_hint) {
 	Player player = position.active_player();
 	Tile invalid = Board::INVALID_TILE;
 
-	if (!position.isInBound(src) || !position.isInBound(dst)) {
+	if (!position.isInBound(src) || !position.isInBound(dst))
 		return {player, DO_NOTHING, invalid, invalid, TYPE_NONE};
-	} else if (position[dst] != Piece::NONE) {
-		return {player, CAPTURE_PIECE, src, dst, TYPE_NONE};
-	} else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2) {
-		return {player, CASTLING, src, dst, TYPE_NONE};
-	} else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2) {
-		return {player, EN_PASSANT, src, dst, TYPE_NONE};
-	} else {
-		Coord end_row = player == PLAYER_WHITE ? position.width() - 1 : 0;
-		if (position[src].type != TYPE_PAWN || dst[1] != end_row)
-			return {player, MOVE_PIECE, src, dst, TYPE_NONE};
-		else
-			return {player, MOVE_PIECE, src, dst, promoType};
-	}
+
+	// figure out what kind of move
+	MoveType move_type;
+	if (position[dst] != Piece::NONE)
+		move_type = CAPTURE_PIECE;
+	else if (position[src].type == TYPE_KING && (dst - src).norm2() > 2)
+		move_type = CASTLING;
+	else if (position[src].type == TYPE_PAWN && (dst - src).norm2() == 2)
+		move_type = EN_PASSANT;
+	else
+		move_type = MOVE_PIECE;
+
+	// promotion
+	Type promo_type;
+	Coord end_row = player == PLAYER_WHITE ? position.width() - 1 : 0;
+	if (position[src].type == TYPE_PAWN && dst[1] == end_row)
+		promo_type = promo_type_hint;
+	else
+		promo_type = TYPE_NONE;
+
+	return {player, move_type, src, dst, promo_type};
 }
 
 bool Rules::isActionLegal(const Position &position, Action a) {
