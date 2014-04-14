@@ -25,6 +25,8 @@ enum Button {
 };
 
 bool isSideway(Orientation);
+extern const Type PROMOTION_TYPES[];
+extern const int NUM_PROMOTYPES;
 
 class View
 {
@@ -40,14 +42,15 @@ public:
 private:
     void updateBuffer(const Position &position, Tile selection, Tile cursor, Type promoCursor, Type promoSelection);
 
-	void drawPanel(float x, float y, const Position &position, Tile selection);
+	void drawPanel(float x, float y, const Position &position, Tile selection, Type promoSelection);
 	void drawBorder(float x, float y);
 	void drawBorderDecoration(float x, float y);
+	void drawPromotionSelectorBackground(float x, float y);
 	void drawBoard(float x, float y, const Position &position, Tile selection);
 	void drawPiece(float x, float y, const Piece &piece, int whichTile);
 	void drawSelection(float x, float y);
 	void drawCursor(float x, float y);
-	void drawPromotionSelector(float x, float y);
+	void drawPromotionSelector(float x, float y, Type selection);
 	void drawButtons();
 
 public:
@@ -57,6 +60,8 @@ public:
 	float getPanelHeightPixels() const;
 	float getBoardWidthPixels() const;
 	float getBoardHeightPixels() const;
+	float getPromotionSelectorWidthPixels() const;
+	float getPromotionSelectorHeightPixels() const;
 
 	int getBoardWidth() const;
 	int getBoardHeight() const;

@@ -20,6 +20,9 @@ bool isSideway(Orientation orientation) {
 	}
 }
 
+const Type PROMOTION_TYPES[4] = { TYPE_QUEEN, TYPE_ROOK, TYPE_KNIGHT, TYPE_BISHOP };
+const int NUM_PROMOTYPES = 4;
+
 View::View(int board_width, int board_height, Orientation orientation, float border_size) :
 	_board_width(board_width), _board_height(board_height),
 	_orientation(orientation),
@@ -55,7 +58,7 @@ View::View(int board_width, int board_height, Orientation orientation, float bor
 	}
 
 	al_set_target_bitmap(_buffer);
-	drawPanel(0.0, 0.0, _position, _selection);
+	drawPanel(0.0, 0.0, _position, _selection, _promo_selection);
 }
 
 View::~View() {
@@ -82,13 +85,9 @@ void View::updateBuffer(const Position &position, Tile selection, Tile cursor, T
 			Tile algebraic = Tile(xx, yy);
 
 			bool redraw = false;
-			if (_selection == algebraic && selection != algebraic)
+			if ((_selection == algebraic) != (selection == algebraic))
 				redraw = true;
-			else if (_selection != algebraic && selection == algebraic)
-				redraw = true;
-			else if (_cursor == algebraic && cursor != algebraic)
-				redraw = true;
-			else if (_cursor != algebraic && cursor == algebraic)
+			else if ((_cursor == algebraic) != (cursor == algebraic))
 				redraw = true;
 			else if (_position[algebraic] != position[algebraic])
 				redraw = true;
@@ -101,8 +100,8 @@ void View::updateBuffer(const Position &position, Tile selection, Tile cursor, T
 			++counter;
 
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
-			float piece_x = _border_size + displayed[0] * getTileSizePixels();
-			float piece_y = _border_size + displayed[1] * getTileSizePixels();
+			float piece_x = _border_size + displayed[0] * _tile_size;
+			float piece_y = _border_size + displayed[1] * _tile_size;
 			const Piece& piece = position[algebraic];
 			TileColor tile_color = (xx + yy) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
 
@@ -124,10 +123,34 @@ void View::updateBuffer(const Position &position, Tile selection, Tile cursor, T
 	_selection = selection;
 	_cursor = cursor;
 
-	// TODO draw promotion selector and buttons
+	for (int i = 0; i < NUM_PROMOTYPES; ++i) {
+		Type promoType = PROMOTION_TYPES[i];
+
+		bool redraw = false;
+		if ((_promo_selection == promoType) != (promoSelection == promoType))
+			redraw = true;
+		else if ((_promo_cursor == promoType) != (promoCursor == promoType))
+			redraw = true;
+
+		if(!redraw)
+			continue;
+
+		float piece_x = 2 * _border_size + _board_width * _tile_size;
+		float piece_y = _border_size + i * _tile_size;
+
+		drawPiece(piece_x, piece_y, Piece{ PLAYER_WHITE, promoType }, TILE_LIGHT);
+
+		if (promoType == promoSelection)
+			drawSelection(piece_x, piece_y);
+		if (promoType == promoCursor)
+			drawCursor(piece_x, piece_y);
+	}
+
+	_promo_selection = promoSelection;
+	_promo_cursor = promoCursor;
 }
 
-void View::drawPanel(float x, float y, const Position &position, Tile selection) {
+void View::drawPanel(float x, float y, const Position &position, Tile selection, Type promoSelection) {
 	_x = x;
 	_y = y;
 	_position = position;
@@ -138,15 +161,21 @@ void View::drawPanel(float x, float y, const Position &position, Tile selection)
 			drawBorderDecoration(x, y);
 		}
 	}
-	const float border = getBorderSizePixels();
-	drawBoard(x + border, y + border, position, selection);
+
+	drawBoard(x + _border_size, y + _border_size, position, selection);
+
+	float promo_x = 2 * _border_size + _board_width * _tile_size;
+	float promo_y = _border_size;
+
+	drawPromotionSelectorBackground(x + promo_x, 0);
+	drawPromotionSelector(x + promo_x, y + promo_y, promoSelection);
 }
 
 void View::drawBorder(float x, float y) {
 	auto color = al_map_rgb(0, 0, 0);
-	float border = getBorderSizePixels();
-	float width = getPanelWidthPixels();
-	float height = getPanelHeightPixels();
+	float border = _border_size;
+	float width = getBoardWidthPixels() + _border_size * 2;
+	float height = getBoardHeightPixels() + _border_size * 2;
 
 	// top
 	al_draw_filled_rectangle(
@@ -160,6 +189,15 @@ void View::drawBorder(float x, float y) {
 	// right
 	al_draw_filled_rectangle(
 		x + width - border, y + border, x + width, y + border + height, color);
+}
+
+void View::drawPromotionSelectorBackground(float x, float y) {
+	auto color = al_map_rgb(0, 0, 0);
+	float width = getPromotionSelectorWidthPixels();
+	float height = getPanelHeightPixels();
+
+	al_draw_filled_rectangle(
+		x, y, x + width, y + height, color);
 }
 
 void View::drawBorderDecoration(float x, float y) {
@@ -183,7 +221,7 @@ void View::drawBorderDecoration(float x, float y) {
 		al_draw_text(
 			_font,
 			al_color_name("white"),
-			getPanelWidthPixels() - _border_size * 0.75, yy,
+			getBoardWidthPixels() + _border_size * 1.25, yy,
 			ALLEGRO_ALIGN_CENTER, buffer
 		);
 	}
@@ -216,8 +254,8 @@ void View::drawBoard(float x, float y, const Position &position, Tile selection)
 		{
 			Tile algebraic = Tile(xx, yy);
 			Tile displayed = convertAlgebraicToDisplayed(algebraic);
-			float piece_x = x + displayed[0] * getTileSizePixels();
-			float piece_y = y + displayed[1] * getTileSizePixels();
+			float piece_x = x + displayed[0] * _tile_size;
+			float piece_y = y + displayed[1] * _tile_size;
 			const Piece& piece = position[algebraic];
 			TileColor tile_color = (xx + yy) % 2 == 0 ? TILE_DARK : TILE_LIGHT;
 			drawPiece(piece_x, piece_y, piece, tile_color);
@@ -242,7 +280,7 @@ void View::drawPiece(float x, float y, const Piece& piece, int tile_color) {
 
 void View::drawSelection(float x, float y) {
 	auto color = al_map_rgb(0, 255, 0);
-	auto l = getTileSizePixels();
+	auto l = _tile_size;
 	auto d = 4.0;
 	auto x1 = x + d * 0.5;
 	auto y1 = y + d * 0.5;
@@ -253,7 +291,7 @@ void View::drawSelection(float x, float y) {
 
 void View::drawCursor(float x, float y) {
 	auto color = al_map_rgb(255, 0, 0);
-	auto l = getTileSizePixels();
+	auto l = _tile_size;
 	auto d = 1.0;
 	auto x1 = x + d * 0.5;
 	auto y1 = y + d * 0.5;
@@ -262,8 +300,22 @@ void View::drawCursor(float x, float y) {
 	al_draw_rectangle(x1, y1, x2, y2, color, d);
 }
 
-void View::drawPromotionSelector(float x, float y) {
-	// TODO implement
+void View::drawPromotionSelector(float x, float y, Type selection) {
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+	Type cursor = getPromotionTypeAt(mouse.x, mouse.y);
+
+	for (int i = 0; i < NUM_PROMOTYPES; ++i) {
+		Type promoType = PROMOTION_TYPES[i];
+		float piece_x = x;
+		float piece_y = y + i * _tile_size;
+		drawPiece(piece_x, piece_y, Piece { PLAYER_WHITE, promoType }, TILE_LIGHT);
+
+		if (promoType == selection)
+			drawSelection(piece_x, piece_y);
+		if (promoType == cursor)
+			drawCursor(piece_x, piece_y);
+	}
 }
 
 void View::drawButtons() {
@@ -279,23 +331,31 @@ float View::getTileSizePixels() const {
 }
 
 float View::getPanelWidthPixels() const {
-	return getBoardWidthPixels() + 2 * getBorderSizePixels();
+	return getBoardWidthPixels() + 2 * _border_size + _tile_size;
 }
 
 float View::getPanelHeightPixels() const {
-	return getBoardHeightPixels() + 2 * getBorderSizePixels();
+	return getBoardHeightPixels() + 2 * _border_size;
 }
 
 float View::getBoardWidthPixels() const {
 	bool sideway = isSideway(_orientation);
 	auto width = sideway ? getBoardHeight() : getBoardWidth();
-	return width * getTileSizePixels();
+	return width * _tile_size;
 }
 
 float View::getBoardHeightPixels() const {
 	bool sideway = isSideway(_orientation);
 	auto height = sideway ? getBoardWidth() : getBoardHeight();
-	return height * getTileSizePixels();
+	return height * _tile_size;
+}
+
+float View::getPromotionSelectorWidthPixels() const {
+	return _tile_size;
+}
+
+float View::getPromotionSelectorHeightPixels() const {
+	return NUM_PROMOTYPES * _tile_size;
 }
 
 int View::getBoardWidth() const {
@@ -376,8 +436,8 @@ Tile View::convertDisplayedToAlgebraic(Tile displayed) const {
 }
 
 Tile View::getTileAt(float x, float y) {
-	float dx = x - getBorderSizePixels() - _x;
-	float dy = y - getBorderSizePixels() - _y;
+	float dx = x - _border_size - _x;
+	float dy = y - _border_size - _y;
 
 	if (dx >= getBoardWidthPixels() || dx < 0
 		|| dy >= getBoardHeightPixels() || dy < 0)
@@ -385,15 +445,23 @@ Tile View::getTileAt(float x, float y) {
 		return Tile(-1, -1);
 	}
 
-	auto tile_size = getTileSizePixels();
-	Tile displayed = Tile(dx / tile_size, dy / tile_size);
+	Tile displayed = Tile(dx / _tile_size, dy / _tile_size);
 	Tile algebraic = convertDisplayedToAlgebraic(displayed);
 	return algebraic;
 }
 
 Type View::getPromotionTypeAt(float x, float y) {
-	// TODO implement
-	return TYPE_QUEEN;
+	float dx = x - _border_size * 2 - getBoardWidthPixels() - _x;
+	float dy = y - _border_size - _y;
+
+	if (dx >= getPromotionSelectorWidthPixels() || dx < 0
+		|| dy >= getPromotionSelectorHeightPixels() || dy < 0)
+	{
+		return TYPE_NONE;
+	}
+
+	int index = dy / _tile_size;
+	return PROMOTION_TYPES[index];
 }
 
 int View::getButtonAt(float x, float y) {
