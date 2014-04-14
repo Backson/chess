@@ -12,13 +12,19 @@ static float MINUS_INFINITY = -99999999.0f;
 static float VERY_BAD = -9999999.0f;
 
 SpeedyBot::SpeedyBot() :
-	Bot()
+	Bot(), _max_depth(3)
 {
 	// nothing
 }
 
-SpeedyBot::SpeedyBot(const Situation &situation) :
-	Bot(situation)
+SpeedyBot::SpeedyBot(int maxDepth) :
+	Bot(), _max_depth(maxDepth)
+{
+	// nothing
+}
+
+SpeedyBot::SpeedyBot(const Situation &situation, int maxDepth) :
+	Bot(situation), _max_depth(maxDepth)
 {
 	// nothing
 }
@@ -34,7 +40,7 @@ void SpeedyBot::update(Action a) {
 Action SpeedyBot::next_action() {
 	Action action;
 	Position position = _game.current_situation();
-	float bestRating = rate_game(2, MINUS_INFINITY, PLUS_INFINITY, 0, position, &action);
+	float bestRating = rate_game(_max_depth, MINUS_INFINITY, PLUS_INFINITY, 0, position, &action);
 
 	printf("bestRating: %.0f\n", bestRating);
 
@@ -56,7 +62,7 @@ float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Positio
 		position.action(*iter, &delta);
 		float rating;
 		if (depth == 0)
-			rating = -rate_game_flat(dist + 1, position);
+			rating = -rate_game_flat(dist, position);
 		else
 			rating = -rate_game(depth - 1, -beta, -bestRating, dist + 1, position);
 		position.apply(delta);

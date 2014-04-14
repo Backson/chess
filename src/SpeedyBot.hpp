@@ -10,9 +10,8 @@ class SpeedyBot :
 {
 public:
 	SpeedyBot();
-	SpeedyBot(uint32);
-	SpeedyBot(const Situation &);
-	SpeedyBot(const Situation &, uint32);
+	SpeedyBot(int);
+	SpeedyBot(const Situation &, int);
 
 	//virtual void update(Action) override;
 	virtual Action next_action() override;
@@ -20,6 +19,8 @@ public:
 private:
 	float rate_game(int, float, float, int, Position &, Action * = 0);
 	float rate_game_flat(int, const Position &);
+
+	int _max_depth;
 };
 
 #endif // SPEEDY_BOT_HPP

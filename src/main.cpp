@@ -178,9 +178,9 @@ int Main::run() {
 
 	const Situation &situation = _game->current_situation();
 
-	_white_bot = new SpeedyBot();
+	_white_bot = new SpeedyBot(2);
 	_white_bot->reset(situation);
-	_black_bot = new SpeedyBot();
+	_black_bot = new SpeedyBot(3);
 	_black_bot->reset(situation);
 	_expect_player_move = _white_bot == nullptr;
 
