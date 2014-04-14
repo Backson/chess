@@ -47,14 +47,9 @@
 			<Add directory="E:/mingw2/boost-1.55.0" />
 		</Compiler>
 		<Linker>
-			<Add option="-lboost_thread-mt-d" />
-			<Add option="-lboost_system-mt-d" />
-			<Add option="-lallegro-static" />
-			<Add option="-lallegro_color-static" />
-			<Add option="-lallegro_image-static" />
-			<Add option="-lallegro_primitives-static" />
-			<Add option="-lallegro_font-static" />
-			<Add option="-lallegro_ttf-static" />
+			<Add option="-lboost_thread-mt" />
+			<Add option="-lboost_system-mt" />
+			<Add option="-lallegro_monolith" />
 			<Add option="-lfreetype" />
 			<Add option="-lgdiplus" />
 			<Add option="-luuid" />
