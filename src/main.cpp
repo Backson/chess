@@ -180,7 +180,7 @@ int Main::run() {
 
 	_white_bot = new SpeedyBot(3);
 	_white_bot->reset(situation);
-	_black_bot = new SpeedyBot(3);
+	_black_bot = new SpeedyBot(2);
 	_black_bot->reset(situation);
 	_expect_player_move = _white_bot == nullptr;
 
