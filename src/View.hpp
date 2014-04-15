@@ -25,8 +25,6 @@ enum Button {
 };
 
 bool isSideway(Orientation);
-extern const Type PROMOTION_TYPES[];
-extern const int NUM_PROMOTYPES;
 
 class View
 {

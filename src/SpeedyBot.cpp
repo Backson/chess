@@ -11,6 +11,61 @@ static float PLUS_INFINITY = 99999999.0f;
 static float MINUS_INFINITY = -99999999.0f;
 static float VERY_BAD = -9999999.0f;
 
+static float PIECE_VALUES[6] = { 0, 9, 5, 3, 3, 1 };
+static float PIECE_POS_RATINGS[6][8][8] = {
+		{
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{0.7, 0.5, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{0.7, 0.5, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+				{1.0, 0.8, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0},
+		}, {
+				{0.0, 0.1, 0.2, 0.3, 0.4, 0.4, 0.3, 0.2},
+				{0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3, 0.2},
+				{0.2, 0.3, 0.4, 0.6, 0.8, 0.7, 0.3, 0.2},
+				{0.3, 0.4, 0.5, 0.9, 1.0, 0.8, 0.5, 0.2},
+				{0.3, 0.4, 0.5, 0.9, 1.0, 0.8, 0.5, 0.2},
+				{0.2, 0.3, 0.4, 0.6, 0.8, 0.7, 0.3, 0.2},
+				{0.1, 0.2, 0.3, 0.4, 0.5, 0.4, 0.3, 0.2},
+				{0.0, 0.1, 0.2, 0.3, 0.4, 0.4, 0.3, 0.2},
+		}, {
+				{0.2, 0.2, 0.3, 0.4, 0.4, 0.3, 0.3, 0.3},
+				{0.4, 0.2, 0.2, 0.2, 0.1, 0.2, 0.3, 0.3},
+				{0.6, 0.3, 0.2, 0.2, 0.1, 0.2, 0.3, 0.3},
+				{1.0, 0.9, 0.5, 0.5, 0.4, 0.3, 0.3, 0.3},
+				{1.0, 0.9, 0.5, 0.5, 0.4, 0.3, 0.3, 0.3},
+				{0.6, 0.3, 0.2, 0.2, 0.1, 0.2, 0.3, 0.3},
+				{0.4, 0.2, 0.2, 0.2, 0.1, 0.2, 0.3, 0.3},
+				{0.2, 0.2, 0.3, 0.4, 0.4, 0.3, 0.3, 0.3},
+		}, {
+				{0.0, 0.1, 0.3, 0.4, 0.3, 0.2, 0.1, 0.0},
+				{0.0, 0.2, 0.3, 0.5, 0.4, 0.3, 0.2, 0.0},
+				{0.1, 0.2, 0.4, 0.8, 0.6, 0.4, 0.2, 0.1},
+				{0.1, 0.3, 0.7, 1.0, 0.8, 0.5, 0.3, 0.1},
+		}, {
+				{0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0},
+				{0.0, 0.1, 0.2, 0.3, 0.3, 0.2, 0.1, 0.0},
+				{0.1, 0.2, 0.4, 0.5, 0.5, 0.4, 0.2, 0.1},
+				{0.1, 0.3, 0.7, 1.0, 1.0, 0.7, 0.3, 0.1},
+				{0.1, 0.3, 0.7, 1.0, 1.0, 0.7, 0.3, 0.1},
+				{0.1, 0.2, 0.4, 0.5, 0.5, 0.4, 0.2, 0.1},
+				{0.0, 0.1, 0.2, 0.3, 0.3, 0.2, 0.1, 0.0},
+				{0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0},
+		}, {
+				{0.0, 0.0, 0.1, 0.2, 0.4, 0.7, 1.0, 0.0},
+				{0.0, 0.0, 0.1, 0.3, 0.5, 0.8, 1.0, 0.0},
+				{0.0, 0.0, 0.2, 0.5, 0.6, 0.9, 1.0, 0.0},
+				{0.0, 0.0, 0.3, 0.6, 0.7, 0.9, 1.0, 0.0},
+				{0.0, 0.0, 0.3, 0.6, 0.7, 0.9, 1.0, 0.0},
+				{0.0, 0.0, 0.2, 0.5, 0.6, 0.9, 1.0, 0.0},
+				{0.0, 0.0, 0.1, 0.3, 0.5, 0.8, 1.0, 0.0},
+				{0.0, 0.0, 0.1, 0.2, 0.4, 0.7, 1.0, 0.0},
+		}
+};
+
 SpeedyBot::SpeedyBot() :
 	Bot(), _max_depth(3)
 {
@@ -79,8 +134,9 @@ float SpeedyBot::rate_game(int depth, float alpha, float beta, int dist, Positio
 }
 
 float SpeedyBot::rate_game_flat(int dist, const Position &position) {
-	float rating = 0;
-	int pawnSum = 0;
+	float material = 0;
+	float posRating = 0;
+	int numPieces = 0;
 	for (Coord y = 0; y < position.height(); ++y)
 	for (Coord x = 0; x < position.width(); ++x) {
 		Piece p = position[Tile(x,y)];
@@ -88,42 +144,25 @@ float SpeedyBot::rate_game_flat(int dist, const Position &position) {
 		if(p.type == TYPE_NONE)
 			continue;
 
-		int factor = 1;
+		float factor = 1.0;
 		if(p.player != position.active_player())
-			factor = -1;
+			factor = -1.0;
 
-		switch(p.type) {
-		case TYPE_QUEEN:
-			rating += 9 * factor;
-			break;
-		case TYPE_ROOK:
-			rating += 5 * factor;
-			break;
-		case TYPE_BISHOP:
-			rating += 3 * factor;
-			break;
-		case TYPE_KNIGHT:
-			rating += 3 * factor;
-			break;
-		case TYPE_PAWN:
-			if(p.player == PLAYER_BLACK)
-				pawnSum += (position.width() - y - 1) * factor;
-			else
-				pawnSum += y * factor;
-			rating += factor;
-			break;
-		default:
-			break;
-		}
+		int relative_y = y;
+		if(p.player == PLAYER_BLACK)
+			relative_y = position.width() - y - 1;
+
+		material += PIECE_VALUES[p.type] * factor;
+		posRating += PIECE_POS_RATINGS[p.type][x][relative_y] * factor;
+		numPieces++;
 	}
 
 	Rules rules;
-	int numMoves = rules.getAllLegalMoves(position).size();
-	if(numMoves == 0) {
+	if(rules.getAllLegalMoves(position).size() == 0) {
 		if(rules.isPlayerInCheck(position, position.active_player()))
 			return VERY_BAD + dist;
 		else
 			return 0;
 	}
-	return rating + numMoves / (64.0f * 64.0f) + pawnSum / (56.0f * 64.0f * 64.0f);
+	return material + posRating / numPieces;
 }
