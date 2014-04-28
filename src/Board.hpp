@@ -71,7 +71,7 @@ private:
 
 	Coord _width = BOARD_WIDTH_DEFAULT;
 	Coord _height = BOARD_HEIGHT_DEFAULT;
-	Piece** _pieces = nullptr;
+	Piece* _pieces = nullptr;
 };
 
 #endif // BOARD_HPP
